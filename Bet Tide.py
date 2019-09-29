@@ -97,8 +97,8 @@ class GuiPart:
             else:
                 form.call('wm', 'attributes', '.', '-topmost', '0')
 
-        on_top = Checkbutton(settings, text="Window always visible", variable=var1, command = on_top_func).grid(row=srw, sticky="W", columnspan = 3)
-        on_top_func()
+        Checkbutton(settings, text="Window always visible", variable=var1, command = on_top_func).grid(row=srw, sticky="W", columnspan = 3)
+        
 
         # Add text
         def settings_static_text():
@@ -403,7 +403,7 @@ class ThreadedClient:
     def record_football_data(self,driver):
 
         # Connect to database
-        conn = sqlite3.connect('bet_data_4.db')
+        conn = sqlite3.connect('bet_data.db')
 
         # Create a cursor object and call it for SQL commands
         c = conn.cursor()
