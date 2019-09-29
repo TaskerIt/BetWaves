@@ -138,7 +138,7 @@ class GuiPart:
                 pass
 
 class RecordedData:
-    def __init__(self, league,row):
+    def __init__(self, league,sub_table,row):
 
         try:
             self.date = datetime.today().strftime('%Y%m%d%H%M%S')
@@ -147,34 +147,44 @@ class RecordedData:
 
         # provide data for database
         try:
-            self.game_time_state = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table[1]/div/table/tbody/tr[{row}]/td[1]/a/event-line/section/bf-livescores/section/div/div/data-bf-livescores-time-elapsed/ng-include/div/div/div').text
+            if sub_table == 0:
+                sub_table = ""
+            else:
+                sub_table = f'[{sub_table}]'
+
+            game_time_state = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table/div/table/tbody/tr[{row}]/td[1]/a/event-line/section/bf-livescores/section/div/div/data-bf-livescores-time-elapsed/ng-include/div/div/div').text
+            self.game_time_state = self.clean_time_int(game_time_state)
         except:
-            self.game_time_state = -1
+            try: 
+                game_time_state = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[1]/a/event-line/section/bf-livescores/section/div/div/data-bf-livescores-start-date/ng-include/div/div/span').text
+                self.game_time_state = self.clean_time_int(game_time_state)
+            except:
+                self.game_time_state = -3600
         
         try:
-            self.home_team_name = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table/div/table/tbody/tr[{row}]/td[1]/a/event-line/section/ul[1]/li[1]').text
+            self.home_team_name = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[1]/a/event-line/section/ul[1]/li[1]').text
         except:
             self.home_team_name = "not available"
 
         try:
-            home_team_score = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table[1]/div/table/tbody/tr[{row}]/td[1]/a/event-line/section/bf-livescores/section/div/div/data-bf-livescores-match-scores/ng-include/div/div/span[1]').text
+            home_team_score = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[1]/a/event-line/section/bf-livescores/section/div/div/data-bf-livescores-match-scores/ng-include/div/div/span[1]').text
             self.home_team_score = int(home_team_score)
         except:
             self.home_team_score = 0
 
         try:
-            self.away_team_name = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table/div/table/tbody/tr[{row}]/td[1]/a/event-line/section/ul[1]/li[2]').text
+            self.away_team_name = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[1]/a/event-line/section/ul[1]/li[2]').text
         except:
             self.away_team_name = "not available" 
 
         try: 
-            away_team_score = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table[1]/div/table/tbody/tr[{row}]/td[1]/a/event-line/section/bf-livescores/section/div/div/data-bf-livescores-match-scores/ng-include/div/div/span[2]').text
+            away_team_score = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[1]/a/event-line/section/bf-livescores/section/div/div/data-bf-livescores-match-scores/ng-include/div/div/span[2]').text
             self.away_team_score = int(away_team_score)
         except:
             self.away_team_score = 0
         
         try:
-            total_matched = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table/div/table/tbody/tr[{row}]/td[1]/a/event-line/section/ul[3]/li').text
+            total_matched = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[1]/a/event-line/section/ul[3]/li').text
             self.total_matched = self.clean_total_int(total_matched)
         except:
             self.total_matched = 0
@@ -182,14 +192,14 @@ class RecordedData:
 
         # Home back odds ---------------
         try:
-            home_back_odds = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table/div/table/tbody/tr[{row}]/td[2]/div[1]/button[1]/div/span[1]').text
+            home_back_odds = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[1]/button[1]/div/span[1]').text
             self.home_back_odds = self.clean_odds_int(home_back_odds)
         except:
             self.home_back_odds = 0
         
         # Home back volume
         try:
-            home_back_volume = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table/div/table/tbody/tr[{row}]/td[2]/div[1]/button[1]/div/span[2]').text
+            home_back_volume = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[1]/button[1]/div/span[2]').text
             self.home_back_volume = self.clean_volume_int(home_back_volume)
         except:
             self.home_back_volume = 0
@@ -197,14 +207,14 @@ class RecordedData:
 
         # Home lay odds ---------------
         try:
-            home_lay_odds = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table/div/table/tbody/tr[{row}]/td[2]/div[1]/button[2]/div/span[1]').text
+            home_lay_odds = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[1]/button[2]/div/span[1]').text
             self.home_lay_odds = self.clean_odds_int(home_lay_odds)
         except:
             self.home_lay_odds = 0
 
         # Home lay volume
         try:
-            home_lay_volume = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table/div/table/tbody/tr[{row}]/td[2]/div[1]/button[2]/div/span[2]').text
+            home_lay_volume = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[1]/button[2]/div/span[2]').text
             self.home_lay_volume = self.clean_volume_int(home_lay_volume)
         except:
             self.home_lay_volume = 0
@@ -212,28 +222,28 @@ class RecordedData:
 
         # Draw back odds ---------------
         try:
-            draw_back_odds = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table/div/table/tbody/tr[{row}]/td[2]/div[2]/button[1]/div/span[1]').text
+            draw_back_odds = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[2]/button[1]/div/span[1]').text
             self.draw_back_odds = self.clean_odds_int(draw_back_odds)
         except:
             self.draw_back_odds = 0
         
         # Draw back volume
         try:
-            draw_back_volume = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table/div/table/tbody/tr[{row}]/td[2]/div[2]/button[1]/div/span[2]').text
+            draw_back_volume = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[2]/button[1]/div/span[2]').text
             self.draw_back_volume = self.clean_volume_int(draw_back_volume)
         except:
             self.draw_back_volume = 0
 
         # Home lay odds ---------------
         try:
-            draw_lay_odds = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table/div/table/tbody/tr[{row}]/td[2]/div[2]/button[2]/div/span[1]').text
+            draw_lay_odds = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[2]/button[2]/div/span[1]').text
             self.draw_lay_odds = self.clean_odds_int(draw_lay_odds)
         except:
             self.draw_lay_odds = 0
 
         # Home lay volume
         try:            
-            draw_lay_volume = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table/div/table/tbody/tr[{row}]/td[2]/div[2]/button[2]/div/span[2]').text
+            draw_lay_volume = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[2]/button[2]/div/span[2]').text
             self.draw_lay_volume = self.clean_volume_int(draw_lay_volume)
         except:
             self.draw_lay_volume = 0
@@ -241,14 +251,14 @@ class RecordedData:
 
         # Away back odds ---------------
         try:
-            away_back_odds = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table/div/table/tbody/tr[{row}]/td[2]/div[3]/button[1]/div/span[1]').text
+            away_back_odds = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[3]/button[1]/div/span[1]').text
             self.away_back_odds = self.clean_odds_int(away_back_odds)
         except:
             self.away_back_odds = 0
 
         # Away back volume
         try:                
-            away_back_volume = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table/div/table/tbody/tr[{row}]/td[2]/div[3]/button[1]/div/span[2]').text
+            away_back_volume = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[3]/button[1]/div/span[2]').text
             self.away_back_volume = self.clean_volume_int(away_back_volume)
         except:
             self.away_back_volume = 0
@@ -256,14 +266,14 @@ class RecordedData:
 
         # Away lay odds ---------------
         try:
-            away_lay_odds = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table/div/table/tbody/tr[{row}]/td[2]/div[3]/button[2]/div/span[1]').text
+            away_lay_odds = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[3]/button[2]/div/span[1]').text
             self.away_lay_odds = self.clean_odds_int(away_lay_odds)
         except:
             self.away_lay_odds = 0
 
         # Away lay volume
         try:
-            away_lay_volume = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table/div/table/tbody/tr[{row}]/td[2]/div[3]/button[2]/div/span[2]').text
+            away_lay_volume = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[3]/button[2]/div/span[2]').text
             self.away_lay_volume = self.clean_volume_int(away_lay_volume)
         except:
             self.away_lay_volume = 0
@@ -274,6 +284,26 @@ class RecordedData:
         data = data.replace(" ","")
         data = data.replace("€","")
         data = data.replace("£","")
+        data = float(data)
+        return data
+
+    def clean_time_int(self,data):
+        #data = str(data)
+        try:
+            if data.find('Starting in ') != -1:
+                # remove starting in with negative
+                data = data.replace("Starting in ","-")
+                data = data.replace("'","")
+            elif data.find('Today ') != -1:
+                data = data.replace("Today ","")
+                data_hour = int(data[:2])
+                data_min = int(data[-2:])
+                now_hour = int(datetime.today().strftime('%H'))
+                now_min = int(datetime.today().strftime('%M'))
+                data = str(-(60*(data_hour - now_hour) + (data_min - now_min)))
+        except:
+            pass
+        data = data.replace("'","")
         data = float(data)
         return data
 
@@ -403,7 +433,7 @@ class ThreadedClient:
     def record_football_data(self,driver):
 
         # Connect to database
-        conn = sqlite3.connect('bet_data_4.db')
+        conn = sqlite3.connect('bet_data.db')
 
         # Create a cursor object and call it for SQL commands
         c = conn.cursor()
@@ -436,55 +466,56 @@ class ThreadedClient:
         # Parse through betfair table
 
         for league in range(1,6):
-            for row in range(1,15):
-                            
-                bet_data = RecordedData(league,row)
+            for sub_table in range (0,3):
+                for row in range(1,15):
+                                
+                    bet_data = RecordedData(league,sub_table,row)
 
-                # Check against not available to trigger end of array
-                if bet_data.home_team_name == "not available":
-                    break
-                # If Check #1 is passed then add data to array
-                c.execute("""INSERT INTO bet_data_table VALUES(:time_stamp,
-                :game_time_state,
-                :home_team_name,
-                :home_team_score,
-                :away_team_name,
-                :away_team_score,
-                :total_matched,
-                :home_back_odds,
-                :home_back_volume,
-                :home_lay_odds,
-                :home_lay_volume,
-                :draw_back_odds,
-                :draw_back_volume,
-                :draw_lay_odds,
-                :draw_lay_volume,
-                :away_back_odds,
-                :away_back_volume,
-                :away_lay_odds,
-                :away_lay_volume)""",{
-                'time_stamp': bet_data.date,
-                'game_time_state': bet_data.game_time_state, 
-                'home_team_name': bet_data.home_team_name,
-                'home_team_score': bet_data.home_team_score,
-                'away_team_name': bet_data.away_team_name,
-                'away_team_score': bet_data.away_team_score,
-                'total_matched': bet_data.total_matched,
-                'home_back_odds':bet_data.home_back_odds,
-                'home_back_volume':bet_data.home_back_volume,
-                'home_lay_odds':bet_data.home_lay_odds,
-                'home_lay_volume':bet_data.home_lay_volume,
-                'draw_back_odds':bet_data.draw_back_odds,
-                'draw_back_volume':bet_data.draw_back_volume,
-                'draw_lay_odds':bet_data.draw_lay_odds,
-                'draw_lay_volume':bet_data.draw_lay_volume,
-                'away_back_odds':bet_data.away_back_odds,
-                'away_back_volume':bet_data.away_back_volume,
-                'away_lay_odds': bet_data.away_lay_odds,
-                'away_lay_volume':bet_data.away_lay_volume})
-                
-                # Commit data to database
-                conn.commit()
+                    # Check against not available to trigger end of array
+                    if bet_data.home_team_name == "not available":
+                        break
+                    # If Check #1 is passed then add data to array
+                    c.execute("""INSERT INTO bet_data_table VALUES(:time_stamp,
+                    :game_time_state,
+                    :home_team_name,
+                    :home_team_score,
+                    :away_team_name,
+                    :away_team_score,
+                    :total_matched,
+                    :home_back_odds,
+                    :home_back_volume,
+                    :home_lay_odds,
+                    :home_lay_volume,
+                    :draw_back_odds,
+                    :draw_back_volume,
+                    :draw_lay_odds,
+                    :draw_lay_volume,
+                    :away_back_odds,
+                    :away_back_volume,
+                    :away_lay_odds,
+                    :away_lay_volume)""",{
+                    'time_stamp': bet_data.date,
+                    'game_time_state': bet_data.game_time_state, 
+                    'home_team_name': bet_data.home_team_name,
+                    'home_team_score': bet_data.home_team_score,
+                    'away_team_name': bet_data.away_team_name,
+                    'away_team_score': bet_data.away_team_score,
+                    'total_matched': bet_data.total_matched,
+                    'home_back_odds':bet_data.home_back_odds,
+                    'home_back_volume':bet_data.home_back_volume,
+                    'home_lay_odds':bet_data.home_lay_odds,
+                    'home_lay_volume':bet_data.home_lay_volume,
+                    'draw_back_odds':bet_data.draw_back_odds,
+                    'draw_back_volume':bet_data.draw_back_volume,
+                    'draw_lay_odds':bet_data.draw_lay_odds,
+                    'draw_lay_volume':bet_data.draw_lay_volume,
+                    'away_back_odds':bet_data.away_back_odds,
+                    'away_back_volume':bet_data.away_back_volume,
+                    'away_lay_odds': bet_data.away_lay_odds,
+                    'away_lay_volume':bet_data.away_lay_volume})
+                    
+                    # Commit data to database
+                    conn.commit()
         
         conn.close()
 
