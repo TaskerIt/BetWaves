@@ -136,13 +136,15 @@ class RecordedData:
         # provide data for database
         try:
             if sub_table == 0:
-                sub_table = ""
-                self.sub_table = sub_table
-            else:
-                sub_table = f'[{sub_table}]'
-                self.sub_table = sub_table
 
-            game_time_state = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table/div/table/tbody/tr[{row}]/td[1]/a/event-line/section/bf-livescores/section/div/div/data-bf-livescores-time-elapsed/ng-include/div/div/div').text
+                sub_table = ""
+    
+            else:
+
+                sub_table = f'[{sub_table}]'
+                
+            game_time_state = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[1]/a/event-line/section/bf-livescores/section/div/div/data-bf-livescores-time-elapsed/ng-include/div/div/div').text
+            
             self.game_time_state = self.clean_time_int(game_time_state)
         except:
             try: 
@@ -322,34 +324,29 @@ def back_draw_trade(row,league,sub_table):
     try:
         if sub_table == 0:
             sub_table = ""
-            self.sub_table = sub_table
         else:
             sub_table = f'[{sub_table}]'
-            self.sub_table = sub_table
     except:
         pass
 
-    # Click to place bet
 
     # !!!!!!!!!!!!! IMPORTANT - When clicking the button, the insert field represents an added row so this insert field row must be an offset +1
     enter_row = row+1
 
-    # Click back a draw trade
-    driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[2]/button[1]').click()
 
-    # Enter back stake
     try:
+        # Click back a draw trade
+        driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[2]/button[1]').click()
+
         # Define back odds
         driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{enter_row}]/td/ng-include/inline-betting-wrapper/bf-inline-betting/section/div/div/div/div[2]/div[1]/div/input').send_keys("10")     
-        # Define back stake
         
+        # Click to close row
+        driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[2]/button[1]').click()
     except:
-        pass
-
-    # TEMPORARY CLOSE ROW 
-
-    driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[2]/button[1]').click()
-
+        bet_data = RecordedData(league,sub_table,row)
+        print("Error - Failed to place bet" + bet_data.home_team_name + " vs " + bet_data.away_team_name)
+    time.sleep(0.5)
         
 
 
@@ -503,7 +500,7 @@ class ThreadedClient:
         # Parse through betfair table
 
         for league in range(1,6):
-            for sub_table in range (0,3):
+            for sub_table in range (1,3):
                 for row in range(1,15):
                                 
                     bet_data = RecordedData(league,sub_table,row)
