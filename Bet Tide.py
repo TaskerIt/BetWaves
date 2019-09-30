@@ -18,7 +18,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 
 class GuiPart:
-    def __init__(self, master, queue, scrape_url, clear_selection, enter_market, exit_market):
+    def __init__(self, master, queue, scrape_url):
         self.queue = queue
 
         # Set up the GUI
@@ -59,22 +59,6 @@ class GuiPart:
 
         start_btn_scrape = tk.Button(bet_overview, text ="Start", command = scrape_url, width = 15)
         start_btn_scrape.grid(row=rw,column = 10, sticky="W")
-
-        # Clear Selection button
-
-        start_btn_scrape = tk.Button(bet_overview, text ="Clear Selection", command = clear_selection, width = 15)
-        start_btn_scrape.grid(row=rw +1 ,column = 10, sticky="W")
-
-        # Enter market button
-
-        start_btn_scrape = tk.Button(bet_overview, text ="Enter", command = enter_market, width = 15)
-        start_btn_scrape.grid(row=rw +2 ,column = 10, sticky="W")
-
-        # Exit market button
-
-        start_btn_scrape = tk.Button(bet_overview, text ="Exit", command = exit_market, width = 15)
-        start_btn_scrape.grid(row=rw +3 ,column = 10, sticky="W")
-
 
         # ------------------- Settings
         # init constants 
@@ -145,12 +129,18 @@ class RecordedData:
         except:
             self.date = 0
 
+        self.league = league
+
+        self.row = row
+
         # provide data for database
         try:
             if sub_table == 0:
                 sub_table = ""
+                self.sub_table = sub_table
             else:
                 sub_table = f'[{sub_table}]'
+                self.sub_table = sub_table
 
             game_time_state = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table/div/table/tbody/tr[{row}]/td[1]/a/event-line/section/bf-livescores/section/div/div/data-bf-livescores-time-elapsed/ng-include/div/div/div').text
             self.game_time_state = self.clean_time_int(game_time_state)
@@ -278,6 +268,8 @@ class RecordedData:
         except:
             self.away_lay_volume = 0
 
+        
+
         # Insert data to database
     def clean_volume_int(self,data):
         data = str(data)
@@ -301,6 +293,8 @@ class RecordedData:
                 now_hour = int(datetime.today().strftime('%H'))
                 now_min = int(datetime.today().strftime('%M'))
                 data = str(-(60*(data_hour - now_hour) + (data_min - now_min)))
+            elif data.find('HT') != -1:
+                data.replace("HT",45.5)
         except:
             pass
         data = data.replace("'","")
@@ -322,6 +316,42 @@ class RecordedData:
         data = float(data)
         return data
 
+# Execute trade
+
+def back_draw_trade(row,league,sub_table):
+    try:
+        if sub_table == 0:
+            sub_table = ""
+            self.sub_table = sub_table
+        else:
+            sub_table = f'[{sub_table}]'
+            self.sub_table = sub_table
+    except:
+        pass
+
+    # Click to place bet
+
+    # !!!!!!!!!!!!! IMPORTANT - When clicking the button, the insert field represents an added row so this insert field row must be an offset +1
+    enter_row = row+1
+
+    # Click back a draw trade
+    driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[2]/button[1]').click()
+
+    # Enter back stake
+    try:
+        # Define back odds
+        driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{enter_row}]/td/ng-include/inline-betting-wrapper/bf-inline-betting/section/div/div/div/div[2]/div[1]/div/input').send_keys("10")     
+        # Define back stake
+        
+    except:
+        pass
+
+    # TEMPORARY CLOSE ROW 
+
+    driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[2]/button[1]').click()
+
+        
+
 
 class ThreadedClient:
     """
@@ -341,7 +371,7 @@ class ThreadedClient:
         self.queue = queue.Queue(  )
 
         # Set up the GUI part
-        self.gui = GuiPart(master, self.queue, self.scrape_url, self.clear_selection, self.enter_market,self.exit_market)
+        self.gui = GuiPart(master, self.queue, self.scrape_url)
 
         # Set up the thread to do asynchronous I/O
         # More threads can also be created and used, if necessary
@@ -414,21 +444,28 @@ class ThreadedClient:
                 url_previous = url
                 n_finish = 1
 
-            n = 0
+            # Set language to English
+            try:
+                driver.find_element_by_xpath('//*[@id="ssc-ht"]/tbody/tr/td[6]/div/div[1]/span[2]').click()
+                driver.find_element_by_xpath('//*[@id="ssc-ht"]/tbody/tr/td[6]/div/div[2]/div/ul/li[1]/a').click()
+            except:
+                pass
 
-            while n < 100000:
+            # Loop through calls of functions
+            
+            for n in range(0,100000):
                 self.queue.put(self.record_football_data(driver))
+                # Print loop number
                 print(n)
                 driver.refresh()
                 time.sleep(1)
-                n = n + 1
+
 
         return driver
             
         print("w8")
 
     #====================== Algorithym code #1 =====================
-
 
     def record_football_data(self,driver):
 
@@ -474,7 +511,12 @@ class ThreadedClient:
                     # Check against not available to trigger end of array
                     if bet_data.home_team_name == "not available":
                         break
-                    # If Check #1 is passed then add data to array
+                    # If Check #1 is passed then:
+
+                    # Execute trade
+                    back_draw_trade(row,league,sub_table)
+                    
+                    # Store data to array
                     c.execute("""INSERT INTO bet_data_table VALUES(:time_stamp,
                     :game_time_state,
                     :home_team_name,
@@ -518,31 +560,6 @@ class ThreadedClient:
                     conn.commit()
         
         conn.close()
-
-    #====================== Enter market =====================
-
-    def enter_market(self):
-        tree_h.selection_clear()
-        selected_items = tree_a.selection_clear  
-        print("hello")
-
-
-    def clear_selection(self):
-        tree_h.selection_clear # clear selection
-        tree_h.selection_remove(tree_h.focus()) # clear focus
-
-        tree_a.selection_clear # clear selection
-        tree_a.selection_remove(tree_a.focus()) # clear focus
-
-        tree_d.selection_clear # clear selection
-        tree_d.selection_remove(tree_d.focus()) # clear focus 
-
-
-    #====================== Exit market =====================
-    def exit_market(self):
-        tree_a.selection_clear
-        print("hello")
-        pass
 
 
 
