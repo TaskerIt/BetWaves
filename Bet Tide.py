@@ -510,8 +510,6 @@ class ThreadedClient:
                         break
                     # If Check #1 is passed then:
 
-                    # Execute trade
-                    back_draw_trade(row,league,sub_table)
                     
                     # Store data to array
                     c.execute("""INSERT INTO bet_data_table VALUES(:time_stamp,
