@@ -125,7 +125,7 @@ class RecordedData:
     def __init__(self, league,sub_table,row):
 
         try:
-            self.date = datetime.today().strftime('%Y%m%d%H%M%S')
+            self.date = datetime.today().strftime('%Y%m%d')
         except:
             self.date = 0
 
@@ -460,7 +460,6 @@ class ThreadedClient:
 
         return driver
             
-        print("w8")
 
     #====================== Algorithym code #1 =====================
 
