@@ -142,13 +142,14 @@ class RecordedData:
             else:
 
                 sub_table = f'[{sub_table}]'
-                
-            game_time_state = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[1]/a/event-line/section/bf-livescores/section/div/div/data-bf-livescores-time-elapsed/ng-include/div/div/div').text
             
+            # Try retrieve game_time_state while in play
+            game_time_state = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[1]/a/event-line/section/bf-livescores/section/div/div/data-bf-livescores-time-elapsed/ng-include/div/div/div').text
             self.game_time_state = self.clean_time_int(game_time_state)
         except:
             try: 
-                game_time_state = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[1]/a/event-line/section/bf-livescores/section/div/div/data-bf-livescores-start-date/ng-include/div/div/span').text
+                # Try retrieve game_time_state after error - probably when not in play
+                game_time_state = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[1]/a/event-line/section/bf-livescores/section/div/div/data-bf-livescores-start-date/ng-include/div/div/span').text                                               
                 self.game_time_state = self.clean_time_int(game_time_state)
             except:
                 self.game_time_state = -3600
@@ -284,11 +285,13 @@ class RecordedData:
     def clean_time_int(self,data):
         #data = str(data)
         try:
-            if data.find('Starting in ') != -1:
+            if data.find('Starting in ') != -1: # Game starting in
                 # remove starting in with negative
                 data = data.replace("Starting in ","-")
                 data = data.replace("'","")
-            elif data.find('Today ') != -1:
+            elif data.find('Starting soon') != -1: # Game starting soon
+                data = -0.5
+            elif data.find('Today ') != -1: # Game starting today
                 data = data.replace("Today ","")
                 data_hour = int(data[:2])
                 data_min = int(data[-2:])
@@ -296,11 +299,14 @@ class RecordedData:
                 now_min = int(datetime.today().strftime('%M'))
                 data = str(-(60*(data_hour - now_hour) + (data_min - now_min)))
             elif data.find('HT') != -1:
-                data.replace("HT",45.5)
+                data = 45.5
+            elif data.find('END') != -1:
+                data = 100
+            else: # Normal case for time
+                data = data.replace("'","")
         except:
             pass
-        data = data.replace("'","")
-        data = float(data)
+        data = float(data) # convert to float for storage
         return data
 
     def clean_total_int(self,data):
@@ -320,7 +326,7 @@ class RecordedData:
 
 # Execute trade
 
-def back_draw_trade(row,league,sub_table):
+def back_draw_trade(row,league,sub_table,back_cash):
     try:
         if sub_table == 0:
             sub_table = ""
@@ -339,7 +345,7 @@ def back_draw_trade(row,league,sub_table):
         driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[2]/button[1]').click()
 
         # Define back odds
-        driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{enter_row}]/td/ng-include/inline-betting-wrapper/bf-inline-betting/section/div/div/div/div[2]/div[1]/div/input').send_keys("10")     
+        driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{enter_row}]/td/ng-include/inline-betting-wrapper/bf-inline-betting/section/div/div/div/div[2]/div[1]/div/input').send_keys(back_cash)     
         
         # Click to close row
         driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[2]/button[1]').click()
