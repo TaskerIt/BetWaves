@@ -1,2 +1,2 @@
-# Betfair_Analysis
+# BetWave
 Simple betfair python scripts
