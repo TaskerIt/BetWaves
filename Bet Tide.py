@@ -122,7 +122,9 @@ class GuiPart:
                 pass
 
 class RecordedData:
-    def __init__(self, league,sub_table,row):
+    def __init__(self, league,sub_table,row,c):
+        
+        self.c = c
 
         try:
             self.date = datetime.today().strftime('%Y%m%d')
@@ -271,9 +273,31 @@ class RecordedData:
         except:
             self.away_lay_volume = 0
 
-        
+        # Average price - function of "draw_back_odds"
+        self.average_draw_back_odds = self.average_data_datehtat("draw_back_odds",self.c)
 
-        # Insert data to database
+    def average_data_datehtat(self,selecter,c):
+        # Define WHERE conditions according to SQLite3 protocol with following array -> improtant is the final comma
+        t = (self.date, self.home_team_name,self.away_team_name,)
+        # data variable
+        data = 0
+        # try to break on error
+        try:
+            # execute the SQLite3 Query including where with same timestamp, home team name and away team name
+            c.execute(f'SELECT {selecter} FROM bet_data_table WHERE time_stamp = ? AND home_team_name = ? AND away_team_name = ?',t)
+            # fetch all selected values and store in array
+            rows = c.fetchall()
+            # calculate sum total over array
+            for row in rows:
+                # sum
+                data += row[0]
+            # calculate mean average value
+            data = data / len(rows)
+        except:
+            # exception in case of error
+            data = "unavailable"
+        return data
+
     def clean_volume_int(self,data):
         data = str(data)
         data = data.replace(" ","")
@@ -508,14 +532,13 @@ class ThreadedClient:
             for sub_table in range (1,3):
                 for row in range(1,15):
                                 
-                    bet_data = RecordedData(league,sub_table,row)
+                    bet_data = RecordedData(league,sub_table,row,c)
 
                     # Check against not available to trigger end of array
                     if bet_data.home_team_name == "not available":
                         break
                     # If Check #1 is passed then:
 
-                    
                     # Store data to array
                     c.execute("""INSERT INTO bet_data_table VALUES(:time_stamp,
                     :game_time_state,
