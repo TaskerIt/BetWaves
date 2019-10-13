@@ -273,8 +273,79 @@ class RecordedData:
         except:
             self.away_lay_volume = 0
 
-        # Average price - function of "draw_back_odds"
-        self.average_draw_back_odds = self.average_data_datehtat("draw_back_odds",self.c)
+        # Market Entry odds
+        try:
+            # Check we are not already in the market
+            if self.check_market_entered("market_entry_odds",c) == -1:
+                # Check game state is at least 20 minutes before start and not in play
+                if self.game_time_state > (-20) and self.game_time_state < 2:
+                    # Identify average draw odds
+                    self.average_draw_back_odds = self.average_data_datehtat("draw_back_odds",self.c)
+                    # condition if current draw odds are greater than average, and above 1.1
+                    if self.draw_back_odds > self.average_draw_back_odds and self.draw_back_odds > 1.1:
+                        # if current odds > average odds then enter market
+                        self.market_entry_odds = self.draw_back_odds
+                        print("entered - " + str(self.home_team_name))
+                    else:
+                        self.market_entry_odds = -1
+                else:
+                    # case where it is far before game start
+                    self.market_entry_odds = -1
+            else:
+                # case where we are already in the market
+                self.market_entry_odds = self.check_market_entered("market_entry_odds",c)
+        except:
+            self.market_entry_odds = self.check_market_entered("market_entry_odds",c)
+
+        # Market Exit odds
+        try:
+            # Check we are currently in the market
+            if self.check_market_entered("market_entry_odds",c) != -1 and self.check_market_entered("market_exit_odds",c) == -1:
+                # Check game state is in_play
+                if self.game_time_state > (0): # prematch
+                    # enter market if 0 < current draw odds < market entry odds
+                    if 0<self.draw_lay_odds<self.market_entry_odds:
+                        # exit market at lay odds
+                        self.market_exit_odds = self.draw_lay_odds
+                        print("exited - " + str(self.home_team_name))
+                    else:
+                        self.market_exit_odds = -1
+                else: # in play
+                    # enter market if 0 < current draw odds < market entry odds
+                    if 0<self.draw_lay_odds<self.market_entry_odds:
+                        # exit market at lay odds
+                        self.market_exit_odds = self.draw_lay_odds
+                        print("exited - " + str(self.home_team_name))
+                    else:
+                        self.market_exit_odds = -1
+            else:
+                # case where we are already out of the market
+                self.market_exit_odds = self.check_market_entered("market_exit_odds",c)
+        except:
+            self.market_exit_odds = self.check_market_entered("market_exit_odds",c)
+
+    def check_market_entered(self,selecter,c):
+        # Define WHERE conditions according to SQLite3 protocol with following array -> improtant is the final comma
+        t = (self.date, self.home_team_name,self.away_team_name,)
+        # data variable
+        data = -1
+        # try to break on error
+        try:
+            # execute the SQLite3 Query including where with same timestamp, home team name and away team name
+            c.execute(f'SELECT {selecter} FROM bet_data_table WHERE time_stamp = ? AND home_team_name = ? AND away_team_name = ?',t)
+            # fetch all selected values and store in array
+            rows = c.fetchall()
+            # calculate last value
+            for row in rows:
+                if row[0] != -1:
+                    data = row[0]
+                    break
+                else:
+                    data = -1 
+        except:
+            # exception in case of error
+            pass
+        return data
 
     def average_data_datehtat(self,selecter,c):
         # Define WHERE conditions according to SQLite3 protocol with following array -> improtant is the final comma
@@ -359,10 +430,8 @@ def back_draw_trade(row,league,sub_table,back_cash):
     except:
         pass
 
-
     # !!!!!!!!!!!!! IMPORTANT - When clicking the button, the insert field represents an added row so this insert field row must be an offset +1
     enter_row = row+1
-
 
     try:
         # Click back a draw trade
@@ -374,7 +443,7 @@ def back_draw_trade(row,league,sub_table,back_cash):
         # Click to close row
         driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[2]/button[1]').click()
     except:
-        bet_data = RecordedData(league,sub_table,row)
+        bet_data = RecordedData(league,sub_table,row,c)
         print("Error - Failed to place bet" + bet_data.home_team_name + " vs " + bet_data.away_team_name)
     time.sleep(0.5)
         
@@ -521,7 +590,9 @@ class ThreadedClient:
             away_back_odds real,
             away_back_volume real,
             away_lay_odds real,
-            away_lay_volume real)""")
+            away_lay_volume real,
+            market_entry_odds real,
+            market_exit_odds real)""")
         except:
             pass
         
@@ -530,7 +601,7 @@ class ThreadedClient:
 
         for league in range(1,6):
             for sub_table in range (1,3):
-                for row in range(1,15):
+                for row in range(1,50):
                                 
                     bet_data = RecordedData(league,sub_table,row,c)
 
@@ -558,7 +629,9 @@ class ThreadedClient:
                     :away_back_odds,
                     :away_back_volume,
                     :away_lay_odds,
-                    :away_lay_volume)""",{
+                    :away_lay_volume,
+                    :market_entry_odds,
+                    :market_exit_odds)""",{
                     'time_stamp': bet_data.date,
                     'game_time_state': bet_data.game_time_state, 
                     'home_team_name': bet_data.home_team_name,
@@ -577,7 +650,9 @@ class ThreadedClient:
                     'away_back_odds':bet_data.away_back_odds,
                     'away_back_volume':bet_data.away_back_volume,
                     'away_lay_odds': bet_data.away_lay_odds,
-                    'away_lay_volume':bet_data.away_lay_volume})
+                    'away_lay_volume':bet_data.away_lay_volume,
+                    'market_entry_odds':bet_data.market_entry_odds,
+                    'market_exit_odds':bet_data.market_exit_odds})
                     
                     # Commit data to database
                     conn.commit()
