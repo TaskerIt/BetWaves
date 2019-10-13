@@ -274,37 +274,51 @@ class RecordedData:
             self.away_lay_volume = 0
 
         # Market Entry odds
+        stake_ammount = 2
         try:
             # Check we are not already in the market
-            if self.check_market_entered("market_entry_odds",c) == -1:
+            if self.check_market("market_entry_odds",c) == -1:
                 # Check game state is at least 20 minutes before start and not in play
-                if self.game_time_state > (-20) and self.game_time_state < 2:
+                if self.game_time_state > (-25) and self.game_time_state < 2:
                     # Identify average draw odds
                     self.average_draw_back_odds = self.average_data_datehtat("draw_back_odds",self.c)
                     # condition if current draw odds are greater than average, and above 1.1
                     if self.draw_back_odds > self.average_draw_back_odds and self.draw_back_odds > 1.1:
                         # if current odds > average odds then enter market
                         self.market_entry_odds = self.draw_back_odds
+                        # remove money from the bank
+                        self.bank_volume = self.get_bank_volume(c)-float(stake_ammount)
                         print("entered - " + str(self.home_team_name))
                     else:
                         self.market_entry_odds = -1
+                        # maintain bank
+                        self.bank_volume = self.get_bank_volume(c)
                 else:
                     # case where it is far before game start
                     self.market_entry_odds = -1
+                    # maintain bank
+                    self.bank_volume = self.get_bank_volume(c)
             else:
                 # case where we are already in the market
-                self.market_entry_odds = self.check_market_entered("market_entry_odds",c)
+                self.market_entry_odds = self.check_market("market_entry_odds",c)
+                # maintain bank
+                self.bank_volume = self.get_bank_volume(c)
         except:
-            self.market_entry_odds = self.check_market_entered("market_entry_odds",c)
+            self.market_entry_odds = self.check_market("market_entry_odds",c)
+            # maintain bank
+            self.bank_volume = self.get_bank_volume(c)
 
         # Market Exit odds
+        margin = 0.1
         try:
+            # Find odds that we entered at
+            self.previous_exit_odds = self.check_market("market_exit_odds",c)
             # Check we are currently in the market
-            if self.check_market_entered("market_entry_odds",c) != -1 and self.check_market_entered("market_exit_odds",c) == -1:
+            if self.market_entry_odds != -1 and self.previous_exit_odds == -1:
                 # Check game state is in_play
                 if self.game_time_state > (0): # prematch
                     # enter market if 0 < current draw odds < market entry odds
-                    if 0<self.draw_lay_odds<self.market_entry_odds:
+                    if 0<self.draw_lay_odds<=(self.market_entry_odds-margin):
                         # exit market at lay odds
                         self.market_exit_odds = self.draw_lay_odds
                         print("exited - " + str(self.home_team_name))
@@ -312,7 +326,7 @@ class RecordedData:
                         self.market_exit_odds = -1
                 else: # in play
                     # enter market if 0 < current draw odds < market entry odds
-                    if 0<self.draw_lay_odds<self.market_entry_odds:
+                    if 0<self.draw_lay_odds<=(self.market_entry_odds-margin):
                         # exit market at lay odds
                         self.market_exit_odds = self.draw_lay_odds
                         print("exited - " + str(self.home_team_name))
@@ -320,11 +334,65 @@ class RecordedData:
                         self.market_exit_odds = -1
             else:
                 # case where we are already out of the market
-                self.market_exit_odds = self.check_market_entered("market_exit_odds",c)
+                self.market_exit_odds = self.previous_exit_odds
         except:
-            self.market_exit_odds = self.check_market_entered("market_exit_odds",c)
+            self.market_exit_odds = self.previous_exit_odds
 
-    def check_market_entered(self,selecter,c):
+        try:
+            self.previous_bank_volume = self.get_bank_volume(c)
+            # Check game is finished
+            if self.game_time_state == 100:
+                # Check we entered and exited the market
+                if self.market_entry_odds != -1 and self.market_exit_odds != -1:
+                    # check game result is draw
+                    if self.home_team_score == self.away_team_score:
+                        # game = draw then bet is won -> add winnings to bank
+                        self.bank_volume = self.previous_bank_volume+stake_ammount+((self.market_entry_odds-self.market_exit_odds)*stake_ammount)
+                        # reset entry and exit odds to prevent further bank changes
+                        self.market_entry_odds = -1
+                        self.market_exit_odds = -1
+                    else:
+                        # Entered but result was not a draw so return steak
+                        self.bank_volume = self.previous_bank_volume+stake_ammount
+                        # reset entry and exit odds to prevent further bank changes
+                        self.market_entry_odds = -1
+                        self.market_exit_odds = -1
+                elif self.market_entry_odds !=-1: # Case where we entered but did not leave
+                        # check game result is draw
+                    if self.home_team_score == self.away_team_score:
+                        # game = draw then bet is won -> add winnings to bank :D
+                        self.bank_volume = self.self.previous_bank_volume+stake_ammount+(self.market_entry_odds*stake_ammount)
+                        # reset entry and exit odds to prevent further bank changes
+                        self.market_entry_odds = -1
+                        self.market_exit_odds = -1
+                    else:
+                        # Case where we entered and lost out stake :(
+                        self.bank_volume = self.previous_bank_volume
+                else: # Case where we never entered the market - should never reach
+                    self.bank_volume = self.previous_bank_volume
+        except:
+            pass
+
+
+    def get_bank_volume(self,c):
+        # try to break on error
+        try:
+            # execute the SQLite3 Query for bank volumne list
+            c.execute(f'SELECT bank_volume FROM bet_data_table')
+            # fetch all selected values and store in array
+            rows = c.fetchall()
+            # bank row count
+            bank_final_row = len(rows) -1
+            # calculate last bank value
+            if bank_final_row != 0:
+                current_bank = rows[bank_final_row][0]
+            else:
+                current_bank = 0
+        except:
+            current_bank = 0
+        return current_bank
+
+    def check_market(self,selecter,c):
         # Define WHERE conditions according to SQLite3 protocol with following array -> improtant is the final comma
         t = (self.date, self.home_team_name,self.away_team_name,)
         # data variable
@@ -421,7 +489,7 @@ class RecordedData:
 
 # Execute trade
 
-def back_draw_trade(row,league,sub_table,back_cash):
+def back_draw_trade(row,league,sub_table,back_cash,c):
     try:
         if sub_table == 0:
             sub_table = ""
@@ -442,10 +510,15 @@ def back_draw_trade(row,league,sub_table,back_cash):
         
         # Click to close row
         driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[2]/button[1]').click()
+
+        # last step
+        result = True
     except:
         bet_data = RecordedData(league,sub_table,row,c)
         print("Error - Failed to place bet" + bet_data.home_team_name + " vs " + bet_data.away_team_name)
+        result = False
     time.sleep(0.5)
+    return result
         
 
 
@@ -592,7 +665,8 @@ class ThreadedClient:
             away_lay_odds real,
             away_lay_volume real,
             market_entry_odds real,
-            market_exit_odds real)""")
+            market_exit_odds real,
+            bank_volume real)""")
         except:
             pass
         
@@ -631,7 +705,8 @@ class ThreadedClient:
                     :away_lay_odds,
                     :away_lay_volume,
                     :market_entry_odds,
-                    :market_exit_odds)""",{
+                    :market_exit_odds,
+                    :bank_volume)""",{
                     'time_stamp': bet_data.date,
                     'game_time_state': bet_data.game_time_state, 
                     'home_team_name': bet_data.home_team_name,
@@ -652,7 +727,8 @@ class ThreadedClient:
                     'away_lay_odds': bet_data.away_lay_odds,
                     'away_lay_volume':bet_data.away_lay_volume,
                     'market_entry_odds':bet_data.market_entry_odds,
-                    'market_exit_odds':bet_data.market_exit_odds})
+                    'market_exit_odds':bet_data.market_exit_odds,
+                    'bank_volume':bet_data.bank_volume})
                     
                     # Commit data to database
                     conn.commit()
