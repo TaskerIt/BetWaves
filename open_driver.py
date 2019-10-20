@@ -5,7 +5,7 @@ import time
 class get_driver:
     def __init__(self,url,url_previous):
 
-        # start chrom driver
+        # start chrome driver
         if url != "": # check box filled
             try:
                 if url == url_previous:
@@ -15,12 +15,14 @@ class get_driver:
                     driver.get(url)
                     time.sleep(2)
                     url_previous = url
-                    
+                    self.driver.maximize_window()
+
             # case when url previous exists
             except:
                 self.driver = webdriver.Chrome(executable_path=r"Wave_inputs/Chromedriver.exe")
                 self.driver.get(url)
                 time.sleep(2)
+                self.driver.maximize_window()
                 url_previous = url
                 
                 

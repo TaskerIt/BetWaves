@@ -191,6 +191,7 @@ class RecordedData:
         data = data.replace(" ","")
         data = data.replace("€","")
         data = data.replace("£","")
+        data = data.replace(",","")
         return data
 
     def clean_odds_int(self,data):
