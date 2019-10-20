@@ -12,16 +12,18 @@ from datetime import datetime, timedelta
 from tkinter import BOTH, END, LEFT, Checkbutton, IntVar, Label, ttk
 
 from bs4 import BeautifulSoup
-# Beautiful Soup
-from selenium import webdriver
-from webdriver_manager.chrome import ChromeDriverManager
+
+# Data
+from reader_bfe_football import RecordedData
+from strategy_laydraw import laydraw
+from open_driver import get_driver
 
 
 class GuiPart:
     def __init__(self, master, queue, scrape_url):
         self.queue = queue
 
-        # Set up the GUI
+        # ACTION: 
 
         def form_setup(): # function to combin form setup
             form.iconbitmap('wave_ico.ico')# Assign icon
@@ -121,427 +123,7 @@ class GuiPart:
                 # expect this branch to be taken in this case
                 pass
 
-class RecordedData:
-    def __init__(self, league,sub_table,row,c):
-        
-        self.c = c
-
-        try:
-            self.date = datetime.today().strftime('%Y%m%d')
-        except:
-            self.date = 0
-
-        self.league = league
-
-        self.row = row
-
-        # provide data for database
-        try:
-            if sub_table == 0:
-
-                sub_table = ""
-    
-            else:
-
-                sub_table = f'[{sub_table}]'
-            
-            # Try retrieve game_time_state while in play
-            game_time_state = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[1]/a/event-line/section/bf-livescores/section/div/div/data-bf-livescores-time-elapsed/ng-include/div/div/div').text
-            self.game_time_state = self.clean_time_int(game_time_state)
-        except:
-            try: 
-                # Try retrieve game_time_state after error - probably when not in play
-                game_time_state = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[1]/a/event-line/section/bf-livescores/section/div/div/data-bf-livescores-start-date/ng-include/div/div/span').text                                               
-                self.game_time_state = self.clean_time_int(game_time_state)
-            except:
-                self.game_time_state = -3600
-        
-        try:
-            self.home_team_name = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[1]/a/event-line/section/ul[1]/li[1]').text
-        except:
-            self.home_team_name = "not available"
-
-        try:
-            home_team_score = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[1]/a/event-line/section/bf-livescores/section/div/div/data-bf-livescores-match-scores/ng-include/div/div/span[1]').text
-            self.home_team_score = int(home_team_score)
-        except:
-            self.home_team_score = 0
-
-        try:
-            self.away_team_name = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[1]/a/event-line/section/ul[1]/li[2]').text
-        except:
-            self.away_team_name = "not available" 
-
-        try: 
-            away_team_score = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[1]/a/event-line/section/bf-livescores/section/div/div/data-bf-livescores-match-scores/ng-include/div/div/span[2]').text
-            self.away_team_score = int(away_team_score)
-        except:
-            self.away_team_score = 0
-        
-        try:
-            total_matched = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[1]/a/event-line/section/ul[3]/li').text
-            self.total_matched = self.clean_total_int(total_matched)
-        except:
-            self.total_matched = 0
-        
-
-        # Home back odds ---------------
-        try:
-            home_back_odds = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[1]/button[1]/div/span[1]').text
-            self.home_back_odds = self.clean_odds_int(home_back_odds)
-        except:
-            self.home_back_odds = 0
-        
-        # Home back volume
-        try:
-            home_back_volume = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[1]/button[1]/div/span[2]').text
-            self.home_back_volume = self.clean_volume_int(home_back_volume)
-        except:
-            self.home_back_volume = 0
-        
-
-        # Home lay odds ---------------
-        try:
-            home_lay_odds = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[1]/button[2]/div/span[1]').text
-            self.home_lay_odds = self.clean_odds_int(home_lay_odds)
-        except:
-            self.home_lay_odds = 0
-
-        # Home lay volume
-        try:
-            home_lay_volume = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[1]/button[2]/div/span[2]').text
-            self.home_lay_volume = self.clean_volume_int(home_lay_volume)
-        except:
-            self.home_lay_volume = 0
-        
-
-        # Draw back odds ---------------
-        try:
-            draw_back_odds = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[2]/button[1]/div/span[1]').text
-            self.draw_back_odds = self.clean_odds_int(draw_back_odds)
-        except:
-            self.draw_back_odds = 0
-        
-        # Draw back volume
-        try:
-            draw_back_volume = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[2]/button[1]/div/span[2]').text
-            self.draw_back_volume = self.clean_volume_int(draw_back_volume)
-        except:
-            self.draw_back_volume = 0
-
-        # Home lay odds ---------------
-        try:
-            draw_lay_odds = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[2]/button[2]/div/span[1]').text
-            self.draw_lay_odds = self.clean_odds_int(draw_lay_odds)
-        except:
-            self.draw_lay_odds = 0
-
-        # Home lay volume
-        try:            
-            draw_lay_volume = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[2]/button[2]/div/span[2]').text
-            self.draw_lay_volume = self.clean_volume_int(draw_lay_volume)
-        except:
-            self.draw_lay_volume = 0
-
-
-        # Away back odds ---------------
-        try:
-            away_back_odds = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[3]/button[1]/div/span[1]').text
-            self.away_back_odds = self.clean_odds_int(away_back_odds)
-        except:
-            self.away_back_odds = 0
-
-        # Away back volume
-        try:                
-            away_back_volume = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[3]/button[1]/div/span[2]').text
-            self.away_back_volume = self.clean_volume_int(away_back_volume)
-        except:
-            self.away_back_volume = 0
-        
-
-        # Away lay odds ---------------
-        try:
-            away_lay_odds = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[3]/button[2]/div/span[1]').text
-            self.away_lay_odds = self.clean_odds_int(away_lay_odds)
-        except:
-            self.away_lay_odds = 0
-
-        # Away lay volume
-        try:
-            away_lay_volume = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[3]/button[2]/div/span[2]').text
-            self.away_lay_volume = self.clean_volume_int(away_lay_volume)
-        except:
-            self.away_lay_volume = 0
-
-
-        # Previous bank volumn -------
-        try:
-            self.previous_bank_volume = self.get_bank_volume(c)
-        except:
-            self.previous_bank_volume = 0
-
-        # Market Entry odds
-        stake_ammount = 2
-        try:
-            # Check we are not already in the market
-            if self.check_market("market_entry_odds",c) == -1:
-                # Check game state is at least 20 minutes before start and not in play
-                if self.game_time_state > (-25) and self.game_time_state < 2:
-                    # Identify average draw odds
-                    self.average_draw_back_odds = self.average_data_datehtat("draw_back_odds",self.c)
-                    # condition if current draw odds are greater than average, and above 1.1
-                    if self.draw_back_odds > self.average_draw_back_odds and self.draw_back_odds > 1.1:
-                        # if current odds > average odds then enter market
-                        self.market_entry_odds = self.draw_back_odds
-                        # remove money from the bank
-                        self.bank_volume = self.get_bank_volume(c)-float(stake_ammount)
-                        print("entered - " + str(self.home_team_name))
-                    else:
-                        self.market_entry_odds = -1
-                        # maintain bank
-                        self.bank_volume = self.get_bank_volume(c)
-                else:
-                    # case where it is far before game start
-                    self.market_entry_odds = -1
-                    # maintain bank
-                    self.bank_volume = self.get_bank_volume(c)
-            else:
-                # case where we are already in the market
-                self.market_entry_odds = self.check_market("market_entry_odds",c)
-                # maintain bank
-                self.bank_volume = self.get_bank_volume(c)
-        except:
-            self.market_entry_odds = self.check_market("market_entry_odds",c)
-            # maintain bank
-            self.bank_volume = self.get_bank_volume(c)
-
-        # Market Exit odds
-        margin = 0.1
-        try:
-            self.previous_exit_odds = self.check_market("market_exit_odds",c)
-            # Check we are currently in the market
-            if self.market_entry_odds != -1 and self.previous_exit_odds == -1:
-                # Check game state is in_play
-                if self.game_time_state > (0): # prematch
-                    # enter market if 0 < current draw odds <= market entry odds
-                    if 0<self.draw_lay_odds and self.draw_lay_odds<=(self.market_entry_odds-margin):
-                        # exit market at lay odds
-                        self.market_exit_odds = self.draw_lay_odds
-                        # return stake as we have now left the market
-                        self.bank_volume = self.previous_bank_volume+stake_ammount
-                        # reset entry and exit odds to prevent further bank changes
-                        print("exited - " + str(self.home_team_name))
-                    else:
-                        self.market_exit_odds = -1
-                else: # in play
-                    # enter market if 0 < current draw odds <= market entry odds
-                    if 0<self.draw_lay_odds and self.draw_lay_odds<=(self.market_entry_odds-margin):
-                        # exit market at lay odds
-                        self.market_exit_odds = self.draw_lay_odds
-                        # return stake as we have now left the market
-                        self.bank_volume = self.previous_bank_volume+stake_ammount
-                        print("exited - " + str(self.home_team_name))
-                    else:
-                        self.market_exit_odds = -1
-            else:
-                # case where we are already out of the market
-                self.market_exit_odds = self.previous_exit_odds
-        except:
-            self.market_exit_odds = self.previous_exit_odds
-
-        try:
-            # Check game is finished
-            if self.game_time_state == 100:
-                # Check we entered and exited the market
-                if self.market_entry_odds > -1 and self.market_exit_odds > -1:
-                    # check game result is draw
-                    if self.home_team_score == self.away_team_score:
-                        # game = draw then bet is won -> add winnings to bank
-                        self.bank_volume = self.previous_bank_volume+((self.market_entry_odds-self.market_exit_odds)*stake_ammount)
-                        # reset entry and exit odds to prevent further bank changes
-                        self.market_entry_odds = -2
-                        self.market_exit_odds = -2
-                    else:
-                        # stake was already returned at time of laying market
-                        self.market_entry_odds = -3
-                        self.market_exit_odds = -3
-                elif self.market_entry_odds > -1: # Case where we entered but did not leave
-                        # check game result is draw
-                    if self.home_team_score == self.away_team_score:
-                        # game = draw then bet is won -> add winnings to bank :D
-                        self.bank_volume = self.self.previous_bank_volume+stake_ammount+(self.market_entry_odds*stake_ammount)
-                        # reset entry and exit odds to prevent further bank changes
-                        self.market_entry_odds = -4
-                        self.market_exit_odds = -4
-                    else:
-                        # Case where we entered and lost out stake :(
-                        self.bank_volume = self.previous_bank_volume
-                        self.market_entry_odds = -4
-                        self.market_exit_odds = -4
-                else: # Case where either a) were never in the market or b) already exited the market
-                    self.bank_volume = self.previous_bank_volume
-        except:
-            pass
-
-
-    def get_bank_volume(self,c):
-        # try to break on error
-        try:
-            # execute the SQLite3 Query for bank volumne list
-            c.execute(f'SELECT bank_volume FROM bet_data_table ORDER BY rowid DESC LIMIT 1')
-            # fetch last value and store in array
-            last_row = c.fetchone()
-            # Check last row is not empty
-            if last_row is not None:
-                # get last row value
-                current_bank = last_row[0]
-            else:
-                # if no rows found assume bank = 0
-                current_bank = 0
-        except:
-            # in case of failure assume bank = 0
-            current_bank = 0
-        return current_bank
-
-    def check_market(self,selecter,c):
-        # Define WHERE conditions according to SQLite3 protocol with following array -> improtant is the final comma
-        t = (self.date, self.home_team_name,self.away_team_name,)
-        # try to break on error
-        try:
-            # execute the SQLite3 Query including where with same timestamp, home team name and away team name
-            c.execute(f'SELECT {selecter} FROM bet_data_table WHERE time_stamp = ? AND home_team_name = ? AND away_team_name = ? ORDER BY rowid DESC LIMIT 1',t)
-            # fetch above query including limit 1 - result is either an array or None
-            last_row = c.fetchone()
-           
-            # Check number 1 if last row is empty - check for data yesterday
-            if last_row is None:
-                # calculate yesterdays date
-                yesterday_date = datetime.strftime(datetime.now() - timedelta(1), '%Y%m%d')
-                # execute the SQLite3 Query including where with yesterdays timestamp, home team name and away team name
-                t = (yesterday_date, self.home_team_name,self.away_team_name,)
-                # Query for a match yesterday
-                c.execute(f'SELECT {selecter} FROM bet_data_table WHERE time_stamp = ? AND home_team_name = ? AND away_team_name = ? ORDER BY rowid DESC LIMIT 1',t)
-                # fetch above query including limit 1
-                last_row = c.fetchone()
-                
-            # Check number 2 for if the last row is still empty
-            if last_row is None:
-                # Assign data as -1 to show no previous data available
-                data = -1
-            else:
-                # Else get data from first item in list of last row
-                data = last_row[0]
-        except:
-            # exception in case of error - assume we have not entered the market
-            data = -1
-            
-        return data
-
-    def average_data_datehtat(self,selecter,c):
-        # Define WHERE conditions according to SQLite3 protocol with following array -> improtant is the final comma
-        t = (self.date, self.home_team_name,self.away_team_name,)
-        # data variable
-        data = 0
-        # try to break on error
-        try:
-            # execute the SQLite3 Query including where with same timestamp, home team name and away team name
-            c.execute(f'SELECT {selecter} FROM bet_data_table WHERE time_stamp = ? AND home_team_name = ? AND away_team_name = ?',t)
-            # fetch all selected values and store in array
-            rows = c.fetchall()
-            # calculate sum total over array
-            for row in rows:
-                # sum
-                data += row[0]
-            # calculate mean average value
-            data = data / len(rows)
-        except:
-            # exception in case of error
-            data = "unavailable"
-        return data
-
-    def clean_volume_int(self,data):
-        data = str(data)
-        data = data.replace(" ","")
-        data = data.replace("€","")
-        data = data.replace("£","")
-        data = float(data)
-        return data
-
-    def clean_time_int(self,data):
-        #data = str(data)
-        try:
-            if data.find('Starting in ') != -1: # Game starting in
-                # remove starting in with negative
-                data = data.replace("Starting in ","-")
-                data = data.replace("'","")
-            elif data.find('Starting soon') != -1: # Game starting soon
-                data = -0.5
-            elif data.find('Today ') != -1: # Game starting today
-                data = data.replace("Today ","")
-                data_hour = int(data[:2])
-                data_min = int(data[-2:])
-                now_hour = int(datetime.today().strftime('%H'))
-                now_min = int(datetime.today().strftime('%M'))
-                data = str(-(60*(data_hour - now_hour) + (data_min - now_min)))
-            elif data.find('HT') != -1:
-                data = 45.5
-            elif data.find('END') != -1:
-                data = 100
-            else: # Normal case for time
-                data = data.replace("'","")
-        except:
-            pass
-        data = float(data) # convert to float for storage
-        return data
-
-    def clean_total_int(self,data):
-        data = str(data)
-        data = data.replace(" ","")
-        data = data.replace("€","")
-        data = data.replace("£","")
-        return data
-
-    def clean_odds_int(self,data):
-        data = str(data)
-        data = data.replace(" ","")
-        data = data.replace("€","")
-        data = data.replace("£","")
-        data = float(data)
-        return data
-
 # Execute trade
-
-def back_draw_trade(row,league,sub_table,back_cash,c):
-    try:
-        if sub_table == 0:
-            sub_table = ""
-        else:
-            sub_table = f'[{sub_table}]'
-    except:
-        pass
-
-    # !!!!!!!!!!!!! IMPORTANT - When clicking the button, the insert field represents an added row so this insert field row must be an offset +1
-    enter_row = row+1
-
-    try:
-        # Click back a draw trade
-        driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[2]/button[1]').click()
-
-        # Define back odds
-        driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{enter_row}]/td/ng-include/inline-betting-wrapper/bf-inline-betting/section/div/div/div/div[2]/div[1]/div/input').send_keys(back_cash)     
-        
-        # Click to close row
-        driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[2]/button[1]').click()
-
-        # last step
-        result = True
-    except:
-        bet_data = RecordedData(league,sub_table,row,c)
-        print("Error - Failed to place bet" + bet_data.home_team_name + " vs " + bet_data.away_team_name)
-        result = False
-    time.sleep(0.5)
-    return result
-        
 
 
 class ThreadedClient:
@@ -611,156 +193,166 @@ class ThreadedClient:
         #self.running = 0
     
     def scrape_url(self):
-        #while self.running:
-        # retireve bet URL from input text
-        global driver
-        global url_previous
-        url = bet_url_entry.get()
-        # start chrom driver
-        if url != "": # check box filled
-            try:
-                if url == url_previous:
-                    # case when matching -> repeat run
-                    n_finish = 20
-                else:
-                    driver.get(url)
-                    time.sleep(2)
-                    url_previous = url
-                    n_finish = 1
-                    # case when url previous exists
-            except:
-                driver = webdriver.Chrome(executable_path=r"Wave_inputs/Chromedriver.exe")
-                driver.get(url)
-                time.sleep(2)
-                url_previous = url
-                n_finish = 1
 
-            # Set language to English
+        # ACTION: Define variables
+        global opened_driver
+        global url_previous
+
+        # ACTION: Retrieve URL from Tkinter text window
+        url = bet_url_entry.get()
+
+        # ACTION: Open Driver window and define driver variable
+        try:
+            # COMMENT: Case where we have already opened the window
+            opened_driver = get_driver(url,url_previous)
+        except:
+            # COMMENT: Case where we have to open a new window
+            url_previous = "not available"
+            opened_driver = get_driver(url,url_previous)
+       
+
+        # ACTION: Loop through calls of functions
+        for n in range(0,100000):
+
+            # STEP: Connect to database
+            conn = sqlite3.connect('bet_data.db')
+
+            # STEP: Create a cursor object and call it for SQL commands
+            c = conn.cursor()
+
+            # STEP: Create bet data table
             try:
-                driver.find_element_by_xpath('//*[@id="ssc-ht"]/tbody/tr/td[6]/div/div[1]/span[2]').click()
-                driver.find_element_by_xpath('//*[@id="ssc-ht"]/tbody/tr/td[6]/div/div[2]/div/ul/li[1]/a').click()
+                c.execute("""CREATE TABLE bet_data_table (time_stamp integer,
+                game_time_state real,
+                home_team_name text,
+                home_team_score integer, 
+                home_team_score integer, 
+                home_team_score integer, 
+                home_team_score integer, 
+                home_team_score integer, 
+                away_team_name text, 
+                away_team_name text, 
+                away_team_name text, 
+                away_team_name text, 
+                away_team_name text, 
+                away_team_name text, 
+                away_team_name text, 
+                away_team_name text, 
+                away_team_name text, 
+                away_team_score integer,
+                total_matched real,
+                home_back_odds real,
+                home_back_volume real,
+                home_lay_odds real,
+                home_lay_volume real,
+                draw_back_odds real,
+                draw_back_volume real,
+                draw_lay_odds real,
+                draw_lay_volume real,
+                away_back_odds real,
+                away_back_volume real,
+                away_lay_odds real,
+                away_lay_volume real,
+                market_entry_odds real,
+                market_exit_odds real,
+                bank_volume real)""")
             except:
+                # COMMENT: Except is normally triggered if table already exists - usually not a failure
                 pass
 
-            # Loop through calls of functions
-            
-            for n in range(0,100000):
-                self.queue.put(self.record_football_data(driver))
-                # Print loop number
-                print(n)
-                driver.refresh()
-                time.sleep(1)
+            # STEP: Parse through betfair table
+            for league in range(1,6):
+                for sub_table in range (1,3):
+                    for row in range(1,50):
+                        # STEP: Gether raw det data class (e.g. home team name)      
+                        bet_data = RecordedData(league,sub_table,row,c,opened_driver.driver)
 
+                        # STEP: Apply strategy to bet data
+                        strategy_data = laydraw(bet_data,c)
 
-        return driver
-            
+                        # STEP: Check against not available
+                        if bet_data.home_team_name == "not available":
+                            # COMMENT: If "not available" then end row loop
+                            break
+                        
+                        # STEP: Store define execute to send data into bet_data_table
+                        c.execute("""INSERT INTO bet_data_table VALUES(:time_stamp,
+                        :game_time_state,
+                        :home_team_name,
+                        :home_team_score,
+                        :away_team_name,
+                        :away_team_score,
+                        :total_matched,
+                        :home_back_odds,
+                        :home_back_volume,
+                        :home_lay_odds,
+                        :home_lay_volume,
+                        :draw_back_odds,
+                        :draw_back_volume,
+                        :draw_lay_odds,
+                        :draw_lay_volume,
+                        :away_back_odds,
+                        :away_back_volume,
+                        :away_lay_odds,
+                        :away_lay_volume,
+                        :market_entry_odds,
+                        :market_exit_odds,
+                        :bank_volume)""",{
+                        'time_stamp': bet_data.date,
+                        'game_time_state': bet_data.game_time_state, 
+                        'game_time_state': bet_data.game_time_state, 
+                        'game_time_state': bet_data.game_time_state, 
+                        'game_time_state': bet_data.game_time_state, 
+                        'game_time_state': bet_data.game_time_state, 
+                        'game_time_state': bet_data.game_time_state, 
+                        'game_time_state': bet_data.game_time_state, 
+                        'game_time_state': bet_data.game_time_state, 
+                        'game_time_state': bet_data.game_time_state, 
+                        'game_time_state': bet_data.game_time_state, 
+                        'game_time_state': bet_data.game_time_state, 
+                        'home_team_name': bet_data.home_team_name,
+                        'home_team_score': bet_data.home_team_score,
+                        'away_team_name': bet_data.away_team_name,
+                        'away_team_score': bet_data.away_team_score,
+                        'total_matched': bet_data.total_matched,
+                        'home_back_odds':bet_data.home_back_odds,
+                        'home_back_volume':bet_data.home_back_volume,
+                        'home_lay_odds':bet_data.home_lay_odds,
+                        'home_lay_volume':bet_data.home_lay_volume,
+                        'draw_back_odds':bet_data.draw_back_odds,
+                        'draw_back_volume':bet_data.draw_back_volume,
+                        'draw_lay_odds':bet_data.draw_lay_odds,
+                        'draw_lay_volume':bet_data.draw_lay_volume,
+                        'away_back_odds':bet_data.away_back_odds,
+                        'away_back_volume':bet_data.away_back_volume,
+                        'away_lay_odds': bet_data.away_lay_odds,
+                        'away_lay_volume':bet_data.away_lay_volume,
+                        'market_entry_odds':strategy_data.market_entry_odds, # COMMENT: Stratey specific data #1
+                        'market_exit_odds':strategy_data.market_exit_odds, # COMMENT: Stratey specific data #2
+                        'bank_volume':strategy_data.bank_volume}) # COMMENT: Stratey specific data #3
 
-    #====================== Algorithym code #1 =====================
-
-    def record_football_data(self,driver):
-
-        # Connect to database
-        conn = sqlite3.connect('bet_data.db')
-
-        # Create a cursor object and call it for SQL commands
-        c = conn.cursor()
-
-        # Create bet data table
-        try:
-            c.execute("""CREATE TABLE bet_data_table (time_stamp integer,
-            game_time_state real,
-            home_team_name text,
-            home_team_score integer, 
-            away_team_name text, 
-            away_team_score integer,
-            total_matched real,
-            home_back_odds real,
-            home_back_volume real,
-            home_lay_odds real,
-            home_lay_volume real,
-            draw_back_odds real,
-            draw_back_volume real,
-            draw_lay_odds real,
-            draw_lay_volume real,
-            away_back_odds real,
-            away_back_volume real,
-            away_lay_odds real,
-            away_lay_volume real,
-            market_entry_odds real,
-            market_exit_odds real,
-            bank_volume real)""")
-        except:
-            pass
+                        # STEP: Commit data array to database
+                        conn.commit()
         
-        # link:   https://www.betfair.com/exchange/plus/football
-        # Parse through betfair table
+            # COMMENT: print function provides feedback to user that loop is running
+            print(n)
 
-        for league in range(1,6):
-            for sub_table in range (1,3):
-                for row in range(1,50):
-                                
-                    bet_data = RecordedData(league,sub_table,row,c)
+            # STEP: Close the database connection
+            conn.close()
 
-                    # Check against not available to trigger end of array
-                    if bet_data.home_team_name == "not available":
-                        break
-                    # If Check #1 is passed then:
+            # STEP: refresh the driver to ensure we get the latest betting data
+            opened_driver.driver.refresh()
 
-                    # Store data to array
-                    c.execute("""INSERT INTO bet_data_table VALUES(:time_stamp,
-                    :game_time_state,
-                    :home_team_name,
-                    :home_team_score,
-                    :away_team_name,
-                    :away_team_score,
-                    :total_matched,
-                    :home_back_odds,
-                    :home_back_volume,
-                    :home_lay_odds,
-                    :home_lay_volume,
-                    :draw_back_odds,
-                    :draw_back_volume,
-                    :draw_lay_odds,
-                    :draw_lay_volume,
-                    :away_back_odds,
-                    :away_back_volume,
-                    :away_lay_odds,
-                    :away_lay_volume,
-                    :market_entry_odds,
-                    :market_exit_odds,
-                    :bank_volume)""",{
-                    'time_stamp': bet_data.date,
-                    'game_time_state': bet_data.game_time_state, 
-                    'home_team_name': bet_data.home_team_name,
-                    'home_team_score': bet_data.home_team_score,
-                    'away_team_name': bet_data.away_team_name,
-                    'away_team_score': bet_data.away_team_score,
-                    'total_matched': bet_data.total_matched,
-                    'home_back_odds':bet_data.home_back_odds,
-                    'home_back_volume':bet_data.home_back_volume,
-                    'home_lay_odds':bet_data.home_lay_odds,
-                    'home_lay_volume':bet_data.home_lay_volume,
-                    'draw_back_odds':bet_data.draw_back_odds,
-                    'draw_back_volume':bet_data.draw_back_volume,
-                    'draw_lay_odds':bet_data.draw_lay_odds,
-                    'draw_lay_volume':bet_data.draw_lay_volume,
-                    'away_back_odds':bet_data.away_back_odds,
-                    'away_back_volume':bet_data.away_back_volume,
-                    'away_lay_odds': bet_data.away_lay_odds,
-                    'away_lay_volume':bet_data.away_lay_volume,
-                    'market_entry_odds':bet_data.market_entry_odds,
-                    'market_exit_odds':bet_data.market_exit_odds,
-                    'bank_volume':bet_data.bank_volume})
-                    
-                    # Commit data to database
-                    conn.commit()
-        
-        conn.close()
+            # STEP: sleep for 1 second to allow the refreshed driver to open
+            time.sleep(1)
 
+
+        # ============= Tidy up ============
+        # COMMENT: define url_previous to allow the existing driver to be used again
+        url_previous = url
 
 
 form = tk.Tk()
-
 
 client = ThreadedClient(form)
 
