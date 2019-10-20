@@ -26,7 +26,7 @@ class GuiPart:
         # ACTION: 
 
         def form_setup(): # function to combin form setup
-            form.iconbitmap('wave_ico.ico')# Assign icon
+            form.iconbitmap('Wave_inputs/wave_ico.ico')# Assign icon
             form.title("Betfair Wave")# Assign window titly
         form_setup() # run form setup
     
@@ -65,7 +65,6 @@ class GuiPart:
         # ------------------- Settings
         # init constants 
         srw = 1
-        scl = 1
 
         # -------- Define tabs existence
         settings = ttk.Frame(tab_parent)
