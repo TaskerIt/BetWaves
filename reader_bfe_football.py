@@ -1,3 +1,6 @@
+#Date
+from datetime import datetime, timedelta
+
 class RecordedData:
     def __init__(self, league,sub_table,row,c,driver):
         
@@ -38,7 +41,7 @@ class RecordedData:
             self.home_team_name = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[1]/a/event-line/section/ul[1]/li[1]').text
         except:
             self.home_team_name = "not available"
-
+        
         try:
             home_team_score = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[1]/a/event-line/section/bf-livescores/section/div/div/data-bf-livescores-match-scores/ng-include/div/div/span[1]').text
             self.home_team_score = int(home_team_score)

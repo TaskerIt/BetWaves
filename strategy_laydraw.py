@@ -3,66 +3,90 @@ class laydraw:
         
         # Configuration variables
         stake_ammount = 2
+        
+        # previous bank volume
+        try:
+            self.previous_bank_volume = self.get_bank_volume(c)
+        except:
+            self.previous_bank_volume = 0
+
+        # previous exit odds
+        try:
+            self.previous_exit_odds = self.check_market("market_exit_odds",bet_data,c)
+        except:
+            self.previous_exit_odds = -1
+        
+        # previous entry odds
+        try:
+            self.previous_entry_odds = self.check_market("market_entry_odds",bet_data,c)
+        except:
+            self.previous_entry_odds = -1
+
+
+        # average draw odds
+
+        try:
+            self.average_draw_back_odds = self.average_data_datehtat("draw_back_odds",bet_data,c)
+        except:
+            self.average_draw_back_odds = 10000 # failure case
+
         # ============= Market Entry ===============
         try:
             # Check we are not already in the market
-            if self.check_market("market_exit_odds",bet_data,c) == -1:
+            if self.previous_entry_odds == -1:
                 # Check game state is at least 20 minutes before start and not in play
                 if bet_data.game_time_state > (-25) and bet_data.game_time_state < 2:
-                    # Identify average draw odds
-                    bet_data.average_draw_back_odds = self.average_data_datehtat("draw_back_odds",bet_data,c)
                     # condition if current draw odds are greater than average, and above 1.1
-                    if bet_data.draw_back_odds > bet_data.average_draw_back_odds and bet_data.draw_back_odds > 1.1:
+                    if bet_data.draw_back_odds > self.average_draw_back_odds and bet_data.draw_back_odds > 1.1:
                         # if current odds > average odds then enter market
-                        self.market_entry_odds = self.draw_back_odds
+                        self.market_entry_odds = bet_data.draw_back_odds
                         # remove money from the bank
-                        self.bank_volume = self.get_bank_volume(c)-float(stake_ammount)
-                        print("entered - " + str(self.home_team_name))
+                        self.bank_volume = self.previous_bank_volume-float(stake_ammount)
+                        print("entered - " + str(bet_data.home_team_name))
                     else:
                         self.market_entry_odds = -1
                         # maintain bank
-                        self.bank_volume = self.get_bank_volume(c)
+                        self.bank_volume = self.previous_bank_volume
                 else:
                     # case where it is far before game start
                     self.market_entry_odds = -1
                     # maintain bank
-                    self.bank_volume = self.get_bank_volume(c)
+                    self.bank_volume = self.previous_bank_volume
             else:
                 # case where we are already in the market
-                self.market_entry_odds = self.check_market("market_exit_odds",bet_data,c)
+                self.market_entry_odds = self.check_market("market_entry_odds",bet_data,c)
                 # maintain bank
-                self.bank_volume = self.get_bank_volume(c)
+                self.bank_volume = self.previous_bank_volume
         except:
-            self.market_entry_odds = self.check_market("market_exit_odds",bet_data,c)
+            self.market_entry_odds = self.check_market("market_entry_odds",bet_data,c)
             # maintain bank
-            self.bank_volume = self.get_bank_volume(c)
+            self.bank_volume = self.previous_bank_volume
 
         # Market Exit odds
         margin = 0.1
         try:
-            self.previous_exit_odds = self.check_market("market_exit_odds",bet_data,c)
             # Check we are currently in the market
             if self.market_entry_odds != -1 and self.previous_exit_odds == -1:
                 # Check game state is in_play
-                if self.game_time_state > (0): # prematch
+                if bet_data.game_time_state > (0): # prematch
                     # enter market if 0 < current draw odds <= market entry odds
-                    if 0<self.draw_lay_odds and self.draw_lay_odds<=(self.market_entry_odds-margin):
+                    if 0<bet_data.draw_lay_odds and bet_data.draw_lay_odds<=(self.market_entry_odds-margin):
                         # exit market at lay odds
-                        self.market_exit_odds = self.draw_lay_odds
+                        self.market_exit_odds = bet_data.draw_lay_odds
                         # return stake as we have now left the market
                         self.bank_volume = self.previous_bank_volume+stake_ammount
                         # reset entry and exit odds to prevent further bank changes
-                        print("exited - " + str(self.home_team_name))
+                        print("exited - " + str(bet_data.home_team_name))
                     else:
                         self.market_exit_odds = -1
                 else: # in play
                     # enter market if 0 < current draw odds <= market entry odds
-                    if 0<self.draw_lay_odds and self.draw_lay_odds<=(self.market_entry_odds-margin):
+                    if 0<bet_data.draw_lay_odds and bet_data.draw_lay_odds<=(self.market_entry_odds-margin):
                         # exit market at lay odds
-                        self.market_exit_odds = self.draw_lay_odds
+                        self.market_exit_odds = bet_data.draw_lay_odds
                         # return stake as we have now left the market
                         self.bank_volume = self.previous_bank_volume+stake_ammount
-                        print("exited - " + str(self.home_team_name))
+                        print("exited - " + str(bet_data.home_team_name))
                     else:
                         self.market_exit_odds = -1
             else:
@@ -73,11 +97,11 @@ class laydraw:
 
         try:
             # Check game is finished
-            if self.game_time_state == 100:
+            if bet_data.game_time_state == 100:
                 # Check we entered and exited the market
                 if self.market_entry_odds > -1 and self.market_exit_odds > -1:
                     # check game result is draw
-                    if self.home_team_score == self.away_team_score:
+                    if bet_data.home_team_score == bet_data.away_team_score:
                         # game = draw then bet is won -> add winnings to bank
                         self.bank_volume = self.previous_bank_volume+((self.market_entry_odds-self.market_exit_odds)*stake_ammount)
                         # reset entry and exit odds to prevent further bank changes
@@ -89,9 +113,9 @@ class laydraw:
                         self.market_exit_odds = -3
                 elif self.market_entry_odds > -1: # Case where we entered but did not leave
                         # check game result is draw
-                    if self.home_team_score == self.away_team_score:
+                    if bet_data.home_team_score == bet_data.away_team_score:
                         # game = draw then bet is won -> add winnings to bank :D
-                        self.bank_volume = self.self.previous_bank_volume+stake_ammount+(self.market_entry_odds*stake_ammount)
+                        self.bank_volume = self.previous_bank_volume+stake_ammount+(self.market_entry_odds*stake_ammount)
                         # reset entry and exit odds to prevent further bank changes
                         self.market_entry_odds = -4
                         self.market_exit_odds = -4
@@ -174,8 +198,14 @@ class laydraw:
                 # sum
                 data += row[0]
             # calculate mean average value
-            data = data / len(rows)
+            if len(rows)>0:
+                data = data / len(rows)
+            else:
+                data = 10000 # failure case
         except:
             # exception in case of error
-            data = "unavailable"
+            if selecter == "draw_back_odds":
+                data = bet_data.draw_back_odds
+            else:
+                data = 10000 # failure case
         return data
