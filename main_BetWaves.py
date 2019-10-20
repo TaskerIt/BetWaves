@@ -253,15 +253,15 @@ class ThreadedClient:
                     for row in range(1,50):
                         # STEP: Gether raw det data class (e.g. home team name)      
                         bet_data = RecordedData(league,sub_table,row,c,opened_driver.driver)
-
-                        # STEP: Apply strategy to bet data
-                        strategy_data = laydraw(bet_data,c)
-
+                        
                         # STEP: Check against not available
                         if bet_data.home_team_name == "not available":
                             # COMMENT: If "not available" then end row loop
                             break
-                        
+
+                        # STEP: Apply strategy to bet data
+                        strategy_data = laydraw(bet_data,c)
+
                         # STEP: Store define execute to send data into bet_data_table
                         c.execute("""INSERT INTO bet_data_table VALUES(:time_stamp,
                         :game_time_state,
