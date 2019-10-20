@@ -14,6 +14,18 @@ Development usage:
 
 The tool should be cloned to a local directory, and executed in a Python environment.
 
+## Code Structure
+
+The code is structured into modules, which contain abbreviations to make it easier to understand their role.
+
+| Abbreviation  | Description                                            | Limit  |
+| ------------- | ------------------------------------------------------ | ------------- |
+| main | The module "main_BetWaves" forms the core of the Betwaves tool. Its role is to open the GUI, form a que and execute betting strategies | 1 file |
+| open | The module type shall open driver windows, new files etc | Unlimited |
+| reader | The module type shall read information from an open module, and present it in a class | Unlimited |
+| strategy | The module type shall apply logic to a reader module data, and output class variables | Unlimited |
+| launch | The module type shall execute a given bet by clicking on the appropriate GUI buttons | Unlimited |
+
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
