@@ -2,7 +2,7 @@
 
 # BetWaves
 
-BetWaves is a tool to navigate Betfair Exchange markets using live data, and there minimise the advantage betmakers have over general users. This is achieved primarily by providing a platform to define and execute betting strategies automatically, and secondly by presenting live data regarding market trends with which the user can make an informed decision whether to enter/leave the market.
+BetWaves is a tool to navigate Betfair Exchange markets using live data, and therefore minimise the advantage Betmakers have over general users. This is achieved primarily by providing a platform to define and execute betting strategies automatically, and secondly by presenting live data regarding market trends with which the user can make an informed decision whether to enter/leave the market.
 
 ## Installation
 
