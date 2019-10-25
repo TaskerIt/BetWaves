@@ -318,10 +318,10 @@ class ThreadedClient:
             conn.close()
 
             # STEP: refresh the driver to ensure we get the latest betting data
-            opened_driver.driver.refresh()
+            #opened_driver.driver.refresh()
 
             # STEP: sleep for 1 second to allow the refreshed driver to open
-            time.sleep(1)
+            time.sleep(0.5)
 
 
         # ============= Tidy up ============

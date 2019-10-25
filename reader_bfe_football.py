@@ -154,6 +154,49 @@ class RecordedData:
         except:
             self.away_lay_volume = 0
 
+        # previous exit odds
+        try:
+            self.previous_exit_odds = self.check_market("market_exit_odds",c)
+        except:
+            self.previous_exit_odds = -1
+        
+        # previous entry odds
+        try:
+            self.previous_entry_odds = self.check_market("market_entry_odds",c)
+        except:
+            self.previous_entry_odds = -1
+
+    def check_market(self,selecter,c):
+        # Define WHERE conditions according to SQLite3 protocol with following array -> improtant is the final comma
+        t = (self.date, self.home_team_name,self.away_team_name,)
+        # try to break on error
+        try:
+            # execute the SQLite3 Query including where with same timestamp, home team name and away team name
+            c.execute(f'SELECT {selecter} FROM bet_data_table WHERE time_stamp = ? AND home_team_name = ? AND away_team_name = ? ORDER BY rowid DESC LIMIT 1',t)
+            # fetch above query including limit 1 - result is either an array or None
+            last_row = c.fetchone()
+            # Check number 1 if last row is empty - check for data yesterday
+            if last_row is None:
+                # calculate yesterdays date
+                yesterday_date = datetime.strftime(datetime.now() - timedelta(1), '%Y%m%d')
+                # execute the SQLite3 Query including where with yesterdays timestamp, home team name and away team name
+                t = (yesterday_date, self.home_team_name,self.away_team_name,)
+                # Query for a match yesterday
+                c.execute(f'SELECT {selecter} FROM bet_data_table WHERE time_stamp = ? AND home_team_name = ? AND away_team_name = ? ORDER BY rowid DESC LIMIT 1',t)
+                # fetch above query including limit 1
+                last_row = c.fetchone()
+            # Check number 2 for if the last row is still empty
+            if last_row is None:
+                # Assign data as -1 to show no previous data available
+                data = -1
+            else:
+                # Else get data from first item in list of last row
+                data = last_row[0]
+        except:
+            # exception in case of error - assume we have not entered the market
+            data = -1    
+        return data   
+
     def clean_volume_int(self,data):
         data = str(data)
         data = data.replace(" ","")
@@ -195,6 +238,7 @@ class RecordedData:
         data = data.replace("€","")
         data = data.replace("£","")
         data = data.replace(",","")
+        data = float(data)
         return data
 
     def clean_odds_int(self,data):
