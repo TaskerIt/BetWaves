@@ -9,15 +9,14 @@ import time
 import tkinter as tk
 #Date
 from datetime import datetime, timedelta
-from tkinter import BOTH, END, LEFT, Checkbutton, IntVar, Label, ttk
+from tkinter import BOTH, END, LEFT, Checkbutton, IntVar, Label, ttk, Tk, OptionMenu, StringVar
 
 from bs4 import BeautifulSoup
 
 # Data
 from reader_bfe_football import RecordedData
-from strategy_laydraw import laydraw
+from strategy_laydraw import laydraw_ct, laydraw_st, laydraw_wt
 from open_driver import get_driver
-
 
 class GuiPart:
     def __init__(self, master, queue, scrape_url):
@@ -49,13 +48,30 @@ class GuiPart:
         # & Bet link text
 
         def bet_overview_static_text():
-            Label(bet_overview, text="Betfair Sportsbook URL:").grid(row=1, column = 1, columnspan = 3)
+            Label(bet_overview, text="Betfair Sportsbook URL: ").grid(row=1, column = 1, columnspan = 1)
+            Label(bet_overview, text="Strategy: ").grid(row=2, column = 1, columnspan = 1)
         bet_overview_static_text() # call static text
 
         # & Bet URL input
         global bet_url_entry
         bet_url_entry = tk.Entry(bet_overview,width = 70)
-        bet_url_entry.grid(row=rw,column = cl+2, columnspan = 7, sticky="W")
+        bet_url_entry.grid(row=rw,column = 3, columnspan = 7, sticky="W")
+
+        OPTIONS = []
+        import os
+        for file in os.listdir():
+            if file.startswith("strategy"):
+                file = file.replace(".py","")
+                OPTIONS.append(file)
+
+        global strategyoptions
+        strategyoptions = StringVar(bet_overview)
+        strategyoptions.set(OPTIONS[0]) # default value
+        
+        w = OptionMenu(bet_overview, strategyoptions, *OPTIONS)
+        w.grid(row=2, column = 3, columnspan = 1)
+        #w.pack()
+
 
         # & Start button
 
@@ -95,12 +111,12 @@ class GuiPart:
         # Lay bet entry
         lay_bet_value = tk.Entry(settings,width = 20)
         lay_bet_value.grid(row=2,column = 2, sticky="W")
-        lay_bet_value.insert(END,"10")
+        lay_bet_value.insert(END,"2")
 
         # Lay bet entry
         lay_bet_value = tk.Entry(settings,width = 20)
         lay_bet_value.grid(row=3,column = 2, sticky="W")
-        lay_bet_value.insert(END,"10")
+        lay_bet_value.insert(END,"2")
 
 
         # unpack tabs
@@ -199,7 +215,8 @@ class ThreadedClient:
 
         # ACTION: Retrieve URL from Tkinter text window
         url = bet_url_entry.get()
-
+        strategy = strategyoptions.get()
+        
         # ACTION: Open Driver window and define driver variable
         try:
             # COMMENT: Case where we have already opened the window
@@ -219,33 +236,11 @@ class ThreadedClient:
             # STEP: Create a cursor object and call it for SQL commands
             c = conn.cursor()
 
-            # STEP: Create bet data table
-            try:
-                c.execute("""CREATE TABLE bet_data_table (time_stamp integer,                
-                game_time_state real,
-                home_team_name text,
-                home_team_score integer,
-                away_team_name text,
-                away_team_score integer,
-                total_matched real,
-                home_back_odds real,
-                home_back_volume real,
-                home_lay_odds real,
-                home_lay_volume real,
-                draw_back_odds real,
-                draw_back_volume real,
-                draw_lay_odds real,
-                draw_lay_volume real,
-                away_back_odds real,
-                away_back_volume real,
-                away_lay_odds real,
-                away_lay_volume real,
-                market_entry_odds real,
-                market_exit_odds real,
-                bank_volume real)""")
-            except:
-                # COMMENT: Except is normally triggered if table already exists - usually not a failure
-                pass
+            # STEP: Create strategy specific table
+            if strategy == "strategy_laydraw":
+                # STEP: create table
+                laydraw_ct(c,strategy)
+
 
             # STEP: Parse through betfair table
             for league in range(1,6):
@@ -258,59 +253,13 @@ class ThreadedClient:
                         if bet_data.home_team_name == "not available":
                             # COMMENT: If "not available" then end row loop
                             break
+                        
+                        if strategy == "strategy_laydraw":
+                            # STEP: Apply strategy to bet data
+                            strategy_data = laydraw_st(bet_data,c,conn)
+                            # STEP: Write results to table
+                            laydraw_wt(bet_data,c,conn,strategy_data,strategy)
 
-                        # STEP: Apply strategy to bet data
-                        strategy_data = laydraw(bet_data,c)
-
-                        # STEP: Store define execute to send data into bet_data_table
-                        c.execute("""INSERT INTO bet_data_table VALUES(:time_stamp,
-                        :game_time_state,
-                        :home_team_name,
-                        :home_team_score,
-                        :away_team_name,
-                        :away_team_score,
-                        :total_matched,
-                        :home_back_odds,
-                        :home_back_volume,
-                        :home_lay_odds,
-                        :home_lay_volume,
-                        :draw_back_odds,
-                        :draw_back_volume,
-                        :draw_lay_odds,
-                        :draw_lay_volume,
-                        :away_back_odds,
-                        :away_back_volume,
-                        :away_lay_odds,
-                        :away_lay_volume,
-                        :market_entry_odds,
-                        :market_exit_odds,
-                        :bank_volume)""",{
-                        'time_stamp': bet_data.date,
-                        'game_time_state': bet_data.game_time_state, 
-                        'home_team_name': bet_data.home_team_name,
-                        'home_team_score': bet_data.home_team_score,
-                        'away_team_name': bet_data.away_team_name,
-                        'away_team_score': bet_data.away_team_score,
-                        'total_matched': bet_data.total_matched,
-                        'home_back_odds':bet_data.home_back_odds,
-                        'home_back_volume':bet_data.home_back_volume,
-                        'home_lay_odds':bet_data.home_lay_odds,
-                        'home_lay_volume':bet_data.home_lay_volume,
-                        'draw_back_odds':bet_data.draw_back_odds,
-                        'draw_back_volume':bet_data.draw_back_volume,
-                        'draw_lay_odds':bet_data.draw_lay_odds,
-                        'draw_lay_volume':bet_data.draw_lay_volume,
-                        'away_back_odds':bet_data.away_back_odds,
-                        'away_back_volume':bet_data.away_back_volume,
-                        'away_lay_odds': bet_data.away_lay_odds,
-                        'away_lay_volume':bet_data.away_lay_volume,
-                        'market_entry_odds':strategy_data.market_entry_odds, # COMMENT: Stratey specific data #1
-                        'market_exit_odds':strategy_data.market_exit_odds, # COMMENT: Stratey specific data #2
-                        'bank_volume':strategy_data.bank_volume}) # COMMENT: Stratey specific data #3
-
-                        # STEP: Commit data array to database
-                        conn.commit()
-        
             # COMMENT: print function provides feedback to user that loop is running
             print(n)
 
@@ -318,10 +267,10 @@ class ThreadedClient:
             conn.close()
 
             # STEP: refresh the driver to ensure we get the latest betting data
-            opened_driver.driver.refresh()
+            #opened_driver.driver.refresh()
 
             # STEP: sleep for 1 second to allow the refreshed driver to open
-            time.sleep(1)
+            time.sleep(0.5)
 
 
         # ============= Tidy up ============
