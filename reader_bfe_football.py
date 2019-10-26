@@ -36,8 +36,7 @@ class RecordedData:
             except:
                 self.game_time_state = -3600
         
-        try:
-                      
+        try:      
             self.home_team_name = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[1]/a/event-line/section/ul[1]/li[1]').text
         except:
             self.home_team_name = "not available"

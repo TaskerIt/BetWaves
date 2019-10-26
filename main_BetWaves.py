@@ -9,15 +9,14 @@ import time
 import tkinter as tk
 #Date
 from datetime import datetime, timedelta
-from tkinter import BOTH, END, LEFT, Checkbutton, IntVar, Label, ttk
+from tkinter import BOTH, END, LEFT, Checkbutton, IntVar, Label, ttk, Tk, OptionMenu, StringVar
 
 from bs4 import BeautifulSoup
 
 # Data
 from reader_bfe_football import RecordedData
-from strategy_laydraw import laydraw
+from strategy_laydraw import laydraw_ct, laydraw_st, laydraw_wt
 from open_driver import get_driver
-
 
 class GuiPart:
     def __init__(self, master, queue, scrape_url):
@@ -49,13 +48,30 @@ class GuiPart:
         # & Bet link text
 
         def bet_overview_static_text():
-            Label(bet_overview, text="Betfair Sportsbook URL:").grid(row=1, column = 1, columnspan = 3)
+            Label(bet_overview, text="Betfair Sportsbook URL: ").grid(row=1, column = 1, columnspan = 1)
+            Label(bet_overview, text="Strategy: ").grid(row=2, column = 1, columnspan = 1)
         bet_overview_static_text() # call static text
 
         # & Bet URL input
         global bet_url_entry
         bet_url_entry = tk.Entry(bet_overview,width = 70)
-        bet_url_entry.grid(row=rw,column = cl+2, columnspan = 7, sticky="W")
+        bet_url_entry.grid(row=rw,column = 3, columnspan = 7, sticky="W")
+
+        OPTIONS = []
+        import os
+        for file in os.listdir():
+            if file.startswith("strategy"):
+                file = file.replace(".py","")
+                OPTIONS.append(file)
+
+        global strategyoptions
+        strategyoptions = StringVar(bet_overview)
+        strategyoptions.set(OPTIONS[0]) # default value
+        
+        w = OptionMenu(bet_overview, strategyoptions, *OPTIONS)
+        w.grid(row=2, column = 3, columnspan = 1)
+        #w.pack()
+
 
         # & Start button
 
@@ -95,12 +111,12 @@ class GuiPart:
         # Lay bet entry
         lay_bet_value = tk.Entry(settings,width = 20)
         lay_bet_value.grid(row=2,column = 2, sticky="W")
-        lay_bet_value.insert(END,"10")
+        lay_bet_value.insert(END,"2")
 
         # Lay bet entry
         lay_bet_value = tk.Entry(settings,width = 20)
         lay_bet_value.grid(row=3,column = 2, sticky="W")
-        lay_bet_value.insert(END,"10")
+        lay_bet_value.insert(END,"2")
 
 
         # unpack tabs
@@ -199,7 +215,8 @@ class ThreadedClient:
 
         # ACTION: Retrieve URL from Tkinter text window
         url = bet_url_entry.get()
-
+        strategy = strategyoptions.get()
+        
         # ACTION: Open Driver window and define driver variable
         try:
             # COMMENT: Case where we have already opened the window
@@ -260,7 +277,7 @@ class ThreadedClient:
                             break
 
                         # STEP: Apply strategy to bet data
-                        strategy_data = laydraw(bet_data,c)
+                        strategy_data = laydraw(bet_data,c,conn)
 
                         # STEP: Store define execute to send data into bet_data_table
                         c.execute("""INSERT INTO bet_data_table VALUES(:time_stamp,
