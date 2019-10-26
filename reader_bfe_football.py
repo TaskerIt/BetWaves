@@ -1,8 +1,9 @@
 #Date
 from datetime import datetime, timedelta
 
+
 class RecordedData:
-    def __init__(self, league,sub_table,row,c,driver):
+    def __init__(self, league,sub_table,row,c,driver,strategy):
         
         self.c = c
 
@@ -63,7 +64,13 @@ class RecordedData:
             self.total_matched = self.clean_total_int(total_matched)
         except:
             self.total_matched = 0
-        
+
+        # count market
+        try:
+            self.count_market = self.getmarketcount(c,strategy)
+        except:
+            self.count_market = 0
+
 
         # Home back odds ---------------
         try:
@@ -72,6 +79,14 @@ class RecordedData:
         except:
             self.home_back_odds = 0
         
+        # Aaverage Previous Home back odds ---------------
+
+        try:
+            self.average_prev_home_back_odds = self.average_data_datehtat("home_back_odds",c,strategy)
+        except:
+            self.average_prev_home_back_odds = 10000 # failure case
+
+
         # Home back volume
         try:
             home_back_volume = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[1]/button[1]/div/span[2]').text
@@ -79,6 +94,7 @@ class RecordedData:
         except:
             self.home_back_volume = 0
         
+        # average previous home back volume
 
         # Home lay odds ---------------
         try:
@@ -87,13 +103,20 @@ class RecordedData:
         except:
             self.home_lay_odds = 0
 
+        # average previous home lay odds
+
+        try:
+            self.average_prev_home_lay_odds = self.average_data_datehtat("home_lay_odds",c,strategy)
+        except:
+            self.average_prev_home_lay_odds = 10000 # failure case
+
         # Home lay volume
         try:
             home_lay_volume = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[1]/button[2]/div/span[2]').text
             self.home_lay_volume = self.clean_volume_int(home_lay_volume)
         except:
             self.home_lay_volume = 0
-        
+
 
         # Draw back odds ---------------
         try:
@@ -101,6 +124,12 @@ class RecordedData:
             self.draw_back_odds = self.clean_odds_int(draw_back_odds)
         except:
             self.draw_back_odds = 0
+
+        # average draw_back_odds
+        try:
+            self.average_prev_draw_back_odds = self.average_data_datehtat("draw_back_odds",c,strategy)
+        except:
+            self.average_prev_draw_back_odds = 10000 # failure case
         
         # Draw back volume
         try:
@@ -109,20 +138,25 @@ class RecordedData:
         except:
             self.draw_back_volume = 0
 
-        # Home lay odds ---------------
+        # Draw lay odds ---------------
         try:
             draw_lay_odds = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[2]/button[2]/div/span[1]').text
             self.draw_lay_odds = self.clean_odds_int(draw_lay_odds)
         except:
             self.draw_lay_odds = 0
 
-        # Home lay volume
+        # average draw_lay_odds
+        try:
+            self.average_prev_draw_lay_odds = self.average_data_datehtat("draw_lay_odds",c,strategy)
+        except:
+            self.average_prev_draw_lay_odds = 10000 # failure case
+
+        # Draw lay volume
         try:            
             draw_lay_volume = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[2]/button[2]/div/span[2]').text
             self.draw_lay_volume = self.clean_volume_int(draw_lay_volume)
         except:
             self.draw_lay_volume = 0
-
 
         # Away back odds ---------------
         try:
@@ -130,6 +164,13 @@ class RecordedData:
             self.away_back_odds = self.clean_odds_int(away_back_odds)
         except:
             self.away_back_odds = 0
+
+
+        # Average away_back_odds
+        try:
+            self.average_prev_away_back_odds = self.average_data_datehtat("away_back_odds",c,strategy)
+        except:
+            self.average_prev_away_back_odds = 10000 # failure case
 
         # Away back volume
         try:                
@@ -139,6 +180,7 @@ class RecordedData:
             self.away_back_volume = 0
         
 
+
         # Away lay odds ---------------
         try:
             away_lay_odds = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[3]/button[2]/div/span[1]').text
@@ -146,32 +188,49 @@ class RecordedData:
         except:
             self.away_lay_odds = 0
 
-        # Away lay volume
+        # Average away_lay_odds
         try:
+            self.average_prev_away_lay_odds = self.average_data_datehtat("away_lay_odds",c,strategy)
+        except:
+            self.average_prev_away_lay_odds = 10000 # failure case
+
+
+        # Away back volume
+        try:                
             away_lay_volume = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[2]/div[3]/button[2]/div/span[2]').text
             self.away_lay_volume = self.clean_volume_int(away_lay_volume)
         except:
             self.away_lay_volume = 0
 
+
+
+
         # previous exit odds
         try:
-            self.previous_exit_odds = self.check_market("market_exit_odds",c)
+            self.previous_exit_odds = self.check_market("market_exit_odds",c,strategy)
         except:
             self.previous_exit_odds = -1
         
         # previous entry odds
         try:
-            self.previous_entry_odds = self.check_market("market_entry_odds",c)
+            self.previous_entry_odds = self.check_market("market_entry_odds",c,strategy)
         except:
             self.previous_entry_odds = -1
 
-    def check_market(self,selecter,c):
+        # previous bank volume
+        try:
+            self.previous_bank_volume = self.get_bank_volume(c,strategy)
+        except:
+            self.previous_bank_volume = 0
+
+
+    def check_market(self,selecter,c,strategy):
         # Define WHERE conditions according to SQLite3 protocol with following array -> improtant is the final comma
         t = (self.date, self.home_team_name,self.away_team_name,)
         # try to break on error
         try:
             # execute the SQLite3 Query including where with same timestamp, home team name and away team name
-            c.execute(f'SELECT {selecter} FROM bet_data_table WHERE time_stamp = ? AND home_team_name = ? AND away_team_name = ? ORDER BY rowid DESC LIMIT 1',t)
+            c.execute(f'SELECT {selecter} FROM {strategy} WHERE time_stamp = ? AND home_team_name = ? AND away_team_name = ? ORDER BY rowid DESC LIMIT 1',t)
             # fetch above query including limit 1 - result is either an array or None
             last_row = c.fetchone()
             # Check number 1 if last row is empty - check for data yesterday
@@ -181,7 +240,7 @@ class RecordedData:
                 # execute the SQLite3 Query including where with yesterdays timestamp, home team name and away team name
                 t = (yesterday_date, self.home_team_name,self.away_team_name,)
                 # Query for a match yesterday
-                c.execute(f'SELECT {selecter} FROM bet_data_table WHERE time_stamp = ? AND home_team_name = ? AND away_team_name = ? ORDER BY rowid DESC LIMIT 1',t)
+                c.execute(f'SELECT {selecter} FROM {strategy} WHERE time_stamp = ? AND home_team_name = ? AND away_team_name = ? ORDER BY rowid DESC LIMIT 1',t)
                 # fetch above query including limit 1
                 last_row = c.fetchone()
             # Check number 2 for if the last row is still empty
@@ -247,3 +306,92 @@ class RecordedData:
         data = data.replace("£","")
         data = float(data)
         return data
+
+
+    def average_data_datehtat(self,selecter,c,strategy):
+        # Define WHERE conditions according to SQLite3 protocol with following array -> improtant is the final comma
+        t = (self.date, self.home_team_name,self.away_team_name,)
+        # data variable
+        data = 0
+        # try to break on error
+        try:
+            # execute the SQLite3 Query including where with same timestamp, home team name and away team name
+            c.execute(f'SELECT SUM({selecter}) FROM {strategy} WHERE time_stamp = ? AND home_team_name = ? AND away_team_name = ?',t)
+            # fetch all selected values and store in array
+            today_sum = c.fetchone()
+            if today_sum[0] is not None:
+                today_sum = float(today_sum[0])
+            else:
+                today_sum = 0
+            try:
+                # calculate yesterdays date
+                yesterday_date = datetime.strftime(datetime.now() - timedelta(1), '%Y%m%d')
+                # execute the SQLite3 Query including where with yesterdays timestamp, home team name and away team name
+                t = (yesterday_date, self.home_team_name,self.away_team_name,)
+                # Query for a match yesterday
+                c.execute(f'SELECT SUM({selecter}) FROM {strategy} WHERE time_stamp = ? AND home_team_name = ? AND away_team_name = ? ORDER BY rowid DESC LIMIT 1',t)
+                # fetch above query including limit 1
+                yesterday_sum = c.fetchone()
+                if yesterday_sum[0] is not None:
+                    yesterday_sum = float(yesterday_sum[0])
+                else:
+                    yesterday_sum = 0
+            except:
+                yesterday_sum = 0
+
+            total = yesterday_sum + today_sum
+                        
+            data = total/self.count_market
+        except:
+            data = 10000 # failure case
+        return data
+    
+    def getmarketcount(self,c,strategy):
+        try:
+            t = (self.date, self.home_team_name,self.away_team_name,)
+            c.execute(f'SELECT COUNT(*) FROM {strategy} WHERE time_stamp = ? AND home_team_name = ? AND away_team_name = ?',t)
+            # fetch last value and store in array
+            today_result = c.fetchone()
+            if today_result is not None:
+                today_result = today_result[0]
+            try:
+                # calculate yesterdays date
+                yesterday_date = datetime.strftime(datetime.now() - timedelta(1), '%Y%m%d')
+                # execute the SQLite3 Query including where with yesterdays timestamp, home team name and away team name
+                t = (yesterday_date, self.home_team_name,self.away_team_name,)
+                c.execute(f'SELECT COUNT(*) FROM {strategy} WHERE time_stamp = ? AND home_team_name = ? AND away_team_name = ?',t)
+                # fetch last value and store in array
+                yesterday_result = c.fetchone()
+                if yesterday_result is not None:
+                    yesterday_result = yesterday_result[0]
+
+                if yesterday_result is not None and today_result is not None:
+                    data = yesterday_result + today_result
+                elif yesterday_result is not None:
+                    data = yesterday_result
+                elif today_result is not None:
+                    data = today_result
+            except:
+                data = today_result
+        except:
+            data = 0
+        return data
+
+    def get_bank_volume(self,c,selecter):
+        # try to break on error
+        try:
+            # execute the SQLite3 Query for bank volumne list
+            c.execute(f'SELECT bank_volume FROM {selecter} ORDER BY rowid DESC LIMIT 1')
+            # fetch last value and store in array
+            last_row = c.fetchone()
+            # Check last row is not empty
+            if last_row is not None:
+                # get last row value
+                current_bank = last_row[0]
+            else:
+                # if no rows found assume bank = 0
+                current_bank = 0
+        except:
+            # in case of failure assume bank = 0
+            current_bank = 0
+        return current_bank

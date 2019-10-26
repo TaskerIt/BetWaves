@@ -247,8 +247,8 @@ class ThreadedClient:
                 for sub_table in range (1,3):
                     for row in range(1,50):
                         # STEP: Gether raw det data class (e.g. home team name)      
-                        bet_data = RecordedData(league,sub_table,row,c,opened_driver.driver)
-                        
+                        bet_data = RecordedData(league,sub_table,row,c,opened_driver.driver,strategy)
+
                         # STEP: Check against not available
                         if bet_data.home_team_name == "not available":
                             # COMMENT: If "not available" then end row loop
