@@ -16,6 +16,7 @@ from bs4 import BeautifulSoup
 # Data
 from reader_bfe_football import RecordedData
 from strategy_laydraw import laydraw_ct, laydraw_st, laydraw_wt
+from strategy_lowodds import lowodds_ct, lowodds_st, lowodds_wt
 from open_driver import get_driver
 
 class GuiPart:
@@ -66,7 +67,7 @@ class GuiPart:
 
         global strategyoptions
         strategyoptions = StringVar(bet_overview)
-        strategyoptions.set(OPTIONS[0]) # default value
+        strategyoptions.set(OPTIONS[1]) # default value
         
         w = OptionMenu(bet_overview, strategyoptions, *OPTIONS)
         w.grid(row=2, column = 3, columnspan = 1)
@@ -240,12 +241,22 @@ class ThreadedClient:
             if strategy == "strategy_laydraw":
                 # STEP: create table
                 laydraw_ct(c,strategy)
+                # Define max value + 1
+                max_league = 5
+                max_subtable = 5
+                max_row = 50
+            elif strategy == "strategy_lowodds":
+                lowodds_ct(c,strategy)
+                # Define max value + 1
+                max_league = 2
+                max_subtable = 3
+                max_row = 11
 
 
             # STEP: Parse through betfair table
-            for league in range(1,6):
-                for sub_table in range (1,3):
-                    for row in range(1,50):
+            for league in range(1,max_league):
+                for sub_table in range (1,max_subtable):
+                    for row in range(1,max_row):
                         # STEP: Gether raw det data class (e.g. home team name)      
                         bet_data = RecordedData(league,sub_table,row,c,opened_driver.driver,strategy)
 
@@ -259,6 +270,14 @@ class ThreadedClient:
                             strategy_data = laydraw_st(bet_data,c,conn)
                             # STEP: Write results to table
                             laydraw_wt(bet_data,c,conn,strategy_data,strategy)
+                        elif strategy == "strategy_lowodds":
+                            # STEP: Apply strategy to bet data
+                            strategy_data = lowodds_st(bet_data,c,conn,opened_driver.driver)
+                            # STEP: Write results to table
+                            lowodds_wt(bet_data,c,conn,strategy_data,strategy)
+
+                            if bet_data.previous_entry_type == "none" and strategy_data.market_entry_type != "none":
+                                break
 
             # COMMENT: print function provides feedback to user that loop is running
             print(n)
@@ -270,7 +289,7 @@ class ThreadedClient:
             #opened_driver.driver.refresh()
 
             # STEP: sleep for 1 second to allow the refreshed driver to open
-            time.sleep(0.5)
+            #time.sleep(0.5)
 
 
         # ============= Tidy up ============
