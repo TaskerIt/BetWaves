@@ -36,7 +36,6 @@ class GuiPart:
         # ------------------- Bet overview tab
         # init constants 
         rw = 1
-        cl = 1
 
         # Define tabs existence
         global bet_overview
@@ -57,6 +56,7 @@ class GuiPart:
         global bet_url_entry
         bet_url_entry = tk.Entry(bet_overview,width = 70)
         bet_url_entry.grid(row=rw,column = 3, columnspan = 7, sticky="W")
+        bet_url_entry.insert(END,"https://www.betfair.com/exchange/plus/football")
 
         OPTIONS = []
         import os
