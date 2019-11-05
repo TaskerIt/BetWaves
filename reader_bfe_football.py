@@ -27,7 +27,18 @@ class RecordedData:
 
             # Try retrieve game_time_state while in play
             game_time_state = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[1]/a/event-line/section/bf-livescores/section/div/div/data-bf-livescores-time-elapsed/ng-include/div/div/div').text
-            self.game_time_state = self.clean_time_int(game_time_state)
+            game_time_state = self.clean_time_int(game_time_state)
+
+            try:
+                # include added on time
+                if game_time_state == 90:
+                    added_time = driver.find_element_by_xpath(f'//*[@id="main-wrapper"]/div/div[2]/div/ui-view/div/div/div/div/div[1]/div/div[1]/bf-super-coupon/main/ng-include[3]/section[{league}]/div[2]/bf-coupon-table{sub_table}/div/table/tbody/tr[{row}]/td[1]/a/event-line/section/bf-livescores/section/div/div/data-bf-livescores-time-elapsed/ng-include/div/div/div[2]').text
+                    added_time = self.clean_time_int(added_time)
+                    self.game_time_state = str(int(game_time_state)+int(added_time))
+                else:
+                    self.game_time_state = game_time_state
+            except:
+                self.game_time_state = game_time_state
         except:
             try: 
                 # Try retrieve game_time_state after error - probably when not in play
