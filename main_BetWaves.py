@@ -50,6 +50,8 @@ class GuiPart:
         def bet_overview_static_text():
             Label(bet_overview, text="Betfair Sportsbook URL: ").grid(row=1, column = 1, columnspan = 1)
             Label(bet_overview, text="Strategy: ").grid(row=2, column = 1, columnspan = 1)
+            Label(bet_overview, text="TIme period (s): ").grid(row=3, column = 1, columnspan = 1)
+
         bet_overview_static_text() # call static text
 
         # & Bet URL input
@@ -58,6 +60,8 @@ class GuiPart:
         bet_url_entry.grid(row=rw,column = 3, columnspan = 7, sticky="W")
         bet_url_entry.insert(END,"https://www.betfair.com/exchange/plus/football")
 
+
+        # Strategy drop down menu
         OPTIONS = []
         import os
         for file in os.listdir():
@@ -71,6 +75,17 @@ class GuiPart:
         
         w = OptionMenu(bet_overview, strategyoptions, *OPTIONS)
         w.grid(row=2, column = 3, columnspan = 1)
+
+        # Timer drop down menu
+        timeoptions = [60,600,6000,6000]
+
+        global timeoption
+        timeoption = StringVar(bet_overview)
+        timeoption.set(timeoptions[3]) # default value
+
+        w = OptionMenu(bet_overview, timeoption, *timeoptions)
+        w.grid(row=3, column = 3, columnspan = 1)
+
         #w.pack()
 
 
@@ -217,7 +232,7 @@ class ThreadedClient:
         # ACTION: Retrieve URL from Tkinter text window
         url = bet_url_entry.get()
         strategy = strategyoptions.get()
-        
+        timelimit = int(timeoption.get())
         # ACTION: Open Driver window and define driver variable
         try:
             # COMMENT: Case where we have already opened the window
@@ -227,9 +242,12 @@ class ThreadedClient:
             url_previous = "not available"
             opened_driver = get_driver(url,url_previous)
        
+        print("Macro started")
 
         # ACTION: Loop through calls of functions
-        for n in range(0,100000):
+        time_elapsed = 0
+        start_time = time.time()
+        while time_elapsed <= timelimit:
 
             # STEP: Connect to database
             conn = sqlite3.connect('bet_data.db')
@@ -280,17 +298,15 @@ class ThreadedClient:
                                 break
 
             # COMMENT: print function provides feedback to user that loop is running
-            print(n)
 
             # STEP: Close the database connection
             conn.close()
 
-            # STEP: refresh the driver to ensure we get the latest betting data
-            #opened_driver.driver.refresh()
-
-            # STEP: sleep for 1 second to allow the refreshed driver to open
-            #time.sleep(0.5)
-
+            # STEP: Increment time elapsed
+            time_elapsed = time.time() - start_time
+            print(str(time_elapsed)+"s - cycle completed")
+        
+        print("Macro finished")
 
         # ============= Tidy up ============
         # COMMENT: define url_previous to allow the existing driver to be used again

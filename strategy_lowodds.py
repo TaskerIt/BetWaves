@@ -57,6 +57,7 @@ class lowodds_st:
                                         self.market_entry_type = "home"
                                         self.bank_volume = bet_data.previous_bank_volume - stake_ammount
                                         execute_trade(driver,bet_data.league,bet_data.sub_table,bet_data.row,"home_back",stake_ammount,bet_data.home_back_odds)
+                                        print("backed: Home team - " + str(bet_data.home_team_name) + " with odds: " + str(self.market_entry_odds))
                                     else:
                                         self.market_entry_odds = bet_data.previous_entry_odds
                                         self.market_entry_type = "none"
@@ -81,6 +82,7 @@ class lowodds_st:
                                     self.market_entry_type = "draw"
                                     self.bank_volume = bet_data.previous_bank_volume - stake_ammount
                                     execute_trade(driver,bet_data.league,bet_data.sub_table,bet_data.row,"draw_back",stake_ammount,bet_data.home_back_odds)
+                                    print("Backed: Draw in market" + str(bet_data.home_team_name) + " vs " + str(bet_data.away_team_name) + " with odds: " + str(self.market_entry_odds))
                                 else:
                                     self.market_entry_odds = bet_data.previous_entry_odds
                                     self.market_entry_type = "none"
@@ -102,6 +104,7 @@ class lowodds_st:
                                         self.market_entry_type = "away"
                                         self.bank_volume = bet_data.previous_bank_volume - stake_ammount
                                         execute_trade(driver,bet_data.league,bet_data.sub_table,bet_data.row,"away_back",stake_ammount,bet_data.home_back_odds)
+                                        print("backed: Away team - " + str(bet_data.away_team_name) + " with odds: " + str(self.market_entry_odds))
                                     else:
                                         self.market_entry_odds = bet_data.previous_entry_odds
                                         self.market_entry_type = "none"
