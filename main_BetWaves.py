@@ -46,7 +46,7 @@ class GuiPart:
         tab_overview_setup() # run tab setup
 
         # & Bet link text
-
+        
         def bet_overview_static_text():
             Label(bet_overview, text="Betfair Sportsbook URL: ").grid(row=1, column = 1, columnspan = 1)
             Label(bet_overview, text="Strategy: ").grid(row=2, column = 1, columnspan = 1)
