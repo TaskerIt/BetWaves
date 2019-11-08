@@ -12,19 +12,12 @@ class lowodds_ct:
             away_team_score integer,
             favourite text,
             favourite_odds real,
-            total_matched real,
             home_back_odds real,
             home_back_volume real,
-            home_lay_odds real,
-            home_lay_volume real,
             draw_back_odds real,
             draw_back_volume real,
-            draw_lay_odds real,
-            draw_lay_volume real,
             away_back_odds real,
             away_back_volume real,
-            away_lay_odds real,
-            away_lay_volume real,
             market_entry_odds real,
             market_entry_type text,
             bank_volume real)""")
@@ -44,71 +37,55 @@ class lowodds_st:
             if bet_data.previous_entry_odds == -1:
                 # Check game state is at least 20 minutes before start and not in play
                 if (88) < bet_data.game_time_state:
-                    # home odds are less than 1.11
-                    if bet_data.home_back_odds<1.16:
-                        # home odds are greater than 1.01 
-                        if bet_data.home_back_odds > 1.01:
-                            # home team are winning
-                            if bet_data.home_team_score > bet_data.away_team_score:
-                                # PREVIOUS odds for backing home team are greater than 1.11 and less than 1.11
-                                if 1.01 < bet_data.previous_home_back_odds < 1.11: # if passed -> place a bet
-                                    if bet_data.favourite == "home":
-                                        self.market_entry_odds = bet_data.home_back_odds
-                                        self.market_entry_type = "home"
-                                        self.bank_volume = bet_data.previous_bank_volume - stake_ammount
-                                        execute_trade(driver,bet_data.league,bet_data.sub_table,bet_data.row,"home_back",stake_ammount,bet_data.home_back_odds)
-                                        print("backed: Home team - " + str(bet_data.home_team_name) + " with odds: " + str(self.market_entry_odds))
-                                    else:
-                                        self.market_entry_odds = bet_data.previous_entry_odds
-                                        self.market_entry_type = "none"
-                                        self.bank_volume = bet_data.previous_bank_volume                                 
-                                else:
-                                    self.market_entry_odds = bet_data.previous_entry_odds
-                                    self.market_entry_type = "none"
-                                    self.bank_volume = bet_data.previous_bank_volume               
-                            else:
-                                self.market_entry_odds = bet_data.previous_entry_odds
-                                self.market_entry_type = "none"
-                                self.bank_volume = bet_data.previous_bank_volume 
-                        else:
-                            self.market_entry_odds = bet_data.previous_entry_odds
-                            self.market_entry_type = "none"
-                            self.bank_volume = bet_data.previous_bank_volume
-                    elif bet_data.draw_back_odds<1.16:
-                        if bet_data.draw_back_odds > 1.01:
-                            if bet_data.home_team_score == bet_data.away_team_score:
-                                if 1.01 < bet_data.previous_draw_back_odds < 1.11:
-                                    self.market_entry_odds = bet_data.draw_back_odds
-                                    self.market_entry_type = "draw"
+                    # home odds are less than 1.16
+                    if 1.01 < bet_data.home_back_odds < 1.16:
+                        # home team are winning
+                        if bet_data.home_team_score > bet_data.away_team_score:
+                            # PREVIOUS odds for backing home team are greater than 1.11 and less than 1.16
+                            if 1.01 < bet_data.previous_home_back_odds < 1.16: # if passed -> place a bet
+                                if bet_data.favourite == "home":
+                                    self.market_entry_odds = bet_data.home_back_odds
+                                    self.market_entry_type = "home"
                                     self.bank_volume = bet_data.previous_bank_volume - stake_ammount
-                                    execute_trade(driver,bet_data.league,bet_data.sub_table,bet_data.row,"draw_back",stake_ammount,bet_data.home_back_odds)
-                                    print("Backed: Draw in market" + str(bet_data.home_team_name) + " vs " + str(bet_data.away_team_name) + " with odds: " + str(self.market_entry_odds))
+                                    execute_trade(driver,bet_data.league,bet_data.sub_table,bet_data.row,"home_back",stake_ammount,bet_data.home_back_odds)
+                                    print("backed: Home team - " + str(bet_data.home_team_name) + " with odds: " + str(self.market_entry_odds))
                                 else:
                                     self.market_entry_odds = bet_data.previous_entry_odds
                                     self.market_entry_type = "none"
-                                    self.bank_volume = bet_data.previous_bank_volume                              
+                                    self.bank_volume = bet_data.previous_bank_volume                                 
                             else:
                                 self.market_entry_odds = bet_data.previous_entry_odds
                                 self.market_entry_type = "none"
-                                self.bank_volume = bet_data.previous_bank_volume  
+                                self.bank_volume = bet_data.previous_bank_volume               
                         else:
                             self.market_entry_odds = bet_data.previous_entry_odds
                             self.market_entry_type = "none"
-                            self.bank_volume = bet_data.previous_bank_volume
-                    elif bet_data.away_back_odds < 1.16:
-                        if bet_data.away_back_odds > 1.01:
-                            if bet_data.home_team_score < bet_data.away_team_score:
-                                if 1.01 < bet_data.previous_away_back_odds < 1.11:
-                                    if bet_data.favourite == "away":
-                                        self.market_entry_odds = bet_data.away_back_odds
-                                        self.market_entry_type = "away"
-                                        self.bank_volume = bet_data.previous_bank_volume - stake_ammount
-                                        execute_trade(driver,bet_data.league,bet_data.sub_table,bet_data.row,"away_back",stake_ammount,bet_data.home_back_odds)
-                                        print("backed: Away team - " + str(bet_data.away_team_name) + " with odds: " + str(self.market_entry_odds))
-                                    else:
-                                        self.market_entry_odds = bet_data.previous_entry_odds
-                                        self.market_entry_type = "none"
-                                        self.bank_volume = bet_data.previous_bank_volume
+                            self.bank_volume = bet_data.previous_bank_volume    
+                    elif 1.01 < bet_data.draw_back_odds<1.16:
+                        if bet_data.home_team_score == bet_data.away_team_score:
+                            if 1.01 < bet_data.previous_draw_back_odds < 1.16:
+                                self.market_entry_odds = bet_data.draw_back_odds
+                                self.market_entry_type = "draw"
+                                self.bank_volume = bet_data.previous_bank_volume - stake_ammount
+                                execute_trade(driver,bet_data.league,bet_data.sub_table,bet_data.row,"draw_back",stake_ammount,bet_data.home_back_odds)
+                                print("Backed: Draw in market" + str(bet_data.home_team_name) + " vs " + str(bet_data.away_team_name) + " with odds: " + str(self.market_entry_odds))
+                            else:
+                                self.market_entry_odds = bet_data.previous_entry_odds
+                                self.market_entry_type = "none"
+                                self.bank_volume = bet_data.previous_bank_volume                              
+                        else:
+                            self.market_entry_odds = bet_data.previous_entry_odds
+                            self.market_entry_type = "none"
+                            self.bank_volume = bet_data.previous_bank_volume    
+                    elif 1.01 < bet_data.away_back_odds < 1.16:
+                        if bet_data.home_team_score < bet_data.away_team_score:
+                            if 1.01 < bet_data.previous_away_back_odds < 1.16:
+                                if bet_data.favourite == "away":
+                                    self.market_entry_odds = bet_data.away_back_odds
+                                    self.market_entry_type = "away"
+                                    self.bank_volume = bet_data.previous_bank_volume - stake_ammount
+                                    execute_trade(driver,bet_data.league,bet_data.sub_table,bet_data.row,"away_back",stake_ammount,bet_data.home_back_odds)
+                                    print("backed: Away team - " + str(bet_data.away_team_name) + " with odds: " + str(self.market_entry_odds))
                                 else:
                                     self.market_entry_odds = bet_data.previous_entry_odds
                                     self.market_entry_type = "none"
@@ -120,7 +97,7 @@ class lowodds_st:
                         else:
                             self.market_entry_odds = bet_data.previous_entry_odds
                             self.market_entry_type = "none"
-                            self.bank_volume = bet_data.previous_bank_volume
+                            self.bank_volume = bet_data.previous_bank_volume    
                     else:
                         self.market_entry_odds = bet_data.previous_entry_odds
                         self.market_entry_type = "none"
@@ -183,19 +160,12 @@ class lowodds_wt:
         :away_team_score,
         :favourite,
         :favourite_odds,
-        :total_matched,
         :home_back_odds,
         :home_back_volume,
-        :home_lay_odds,
-        :home_lay_volume,
         :draw_back_odds,
         :draw_back_volume,
-        :draw_lay_odds,
-        :draw_lay_volume,
         :away_back_odds,
         :away_back_volume,
-        :away_lay_odds,
-        :away_lay_volume,
         :market_entry_odds,
         :market_entry_type,
         :bank_volume)""",{
@@ -207,19 +177,12 @@ class lowodds_wt:
         'away_team_score': bet_data.away_team_score,
         'favourite':bet_data.favourite,
         'favourite_odds':bet_data.favourite_odds,
-        'total_matched': bet_data.total_matched,
         'home_back_odds':bet_data.home_back_odds,
         'home_back_volume':bet_data.home_back_volume,
-        'home_lay_odds':bet_data.home_lay_odds,
-        'home_lay_volume':bet_data.home_lay_volume,
         'draw_back_odds':bet_data.draw_back_odds,
         'draw_back_volume':bet_data.draw_back_volume,
-        'draw_lay_odds':bet_data.draw_lay_odds,
-        'draw_lay_volume':bet_data.draw_lay_volume,
         'away_back_odds':bet_data.away_back_odds,
         'away_back_volume':bet_data.away_back_volume,
-        'away_lay_odds': bet_data.away_lay_odds,
-        'away_lay_volume':bet_data.away_lay_volume,
         'market_entry_odds':strategy_data.market_entry_odds, # COMMENT: Stratey specific data #1
         'market_entry_type':strategy_data.market_entry_type, # COMMENT: Stratey specific data #2
         'bank_volume':strategy_data.bank_volume}) # COMMENT: Stratey specific data #3
