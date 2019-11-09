@@ -14,7 +14,7 @@ from tkinter import BOTH, END, LEFT, Checkbutton, IntVar, Label, ttk, Tk, Option
 from bs4 import BeautifulSoup
 
 # Data
-from reader_bfe_football import RecordedData
+from reader_bfe_football_precise import RecordedData
 from strategy_laydraw import laydraw_ct, laydraw_st, laydraw_wt
 from strategy_lowodds import lowodds_ct, lowodds_st, lowodds_wt
 from open_driver import get_driver
@@ -269,26 +269,70 @@ class ThreadedClient:
                 max_league = 2
                 max_subtable = 3
                 max_row = 11
+                # STEP: Define dictionary:
+                strategy_lowodds_readstates = {
+                "time_stamp":"yes",                
+                "game_time_state":"yes" ,
+                "home_team_name":"yes" ,
+                "home_team_score":"yes" ,
+                "away_team_name":"yes" ,
+                "away_team_score":"yes" ,
+                "favourite":"yes",
+                "favourite text":"yes",
+                "favourite_odds":"yes" ,
+                "total_matched":"no" ,
+                "home_back_odds":"yes" ,
+                "previous_home_back_odds":"yes",
+                "average_prev_home_back_odds":"yes",
+                "home_back_volume":"no",
+                "home_lay_odds":"no",
+                "average_prev_home_lay_odds":"yes",
+                "home_lay_volume":"no" ,
+                "draw_back_odds":"yes" ,
+                "previous_draw_back_odds":"yes",
+                "average_prev_draw_back_odds":"yes",
+                "draw_back_volume":"no" ,
+                "draw_lay_odds":"no" ,
+                "average_prev_draw_lay_odds":"yes",
+                "draw_lay_volume":"no" ,
+                "away_back_odds":"yes" ,
+                "previous_away_back_odds":"yes",
+                "average_prev_away_back_odds":"yes",
+                "away_back_volume":"no" ,
+                "away_lay_odds":"no" ,
+                "away_lay_volume":"no" ,
+                "previous_entry_type":"yes",
+                "market_entry_odds":"yes" ,
+                "previous_entry_odds": "yes",
+                "market_exit_odds":"yes" ,
+                "previous_bank_volume":"yes",
+                "bank_volume":"yes",
+                "count_market":"yes"
+                }
 
 
             # STEP: Parse through betfair table
             for league in range(1,max_league):
                 for sub_table in range (1,max_subtable):
-                    for row in range(1,max_row):
-                        # STEP: Gether raw det data class (e.g. home team name)      
-                        bet_data = RecordedData(league,sub_table,row,c,opened_driver.driver,strategy)
-
-                        # STEP: Check against not available
-                        if bet_data.home_team_name == "not available":
-                            # COMMENT: If "not available" then end row loop
-                            break
-                        
+                    for row in range(1,max_row):                        
                         if strategy == "strategy_laydraw":
+                            # STEP: Gether raw det data class (e.g. home team name)      
+                            bet_data = RecordedData(league,sub_table,row,c,opened_driver.driver,strategy,strategy_strategy_laydraw)
+                            # STEP: Check against not available
+                            if bet_data.home_team_name == "not available":
+                                # COMMENT: If "not available" then end row loop
+                                break
                             # STEP: Apply strategy to bet data
                             strategy_data = laydraw_st(bet_data,c,conn)
                             # STEP: Write results to table
                             laydraw_wt(bet_data,c,conn,strategy_data,strategy)
                         elif strategy == "strategy_lowodds":
+                            # STEP: Gether raw det data class (e.g. home team name)      
+                            bet_data = RecordedData(league,sub_table,row,c,opened_driver.driver,strategy,strategy_lowodds_readstates)
+                            # STEP: Check against not available
+                            if bet_data.home_team_name == "not available":
+                                # COMMENT: If "not available" then end row loop
+                                break
                             # STEP: Apply strategy to bet data
                             strategy_data = lowodds_st(bet_data,c,conn,opened_driver.driver)
                             # STEP: Write results to table

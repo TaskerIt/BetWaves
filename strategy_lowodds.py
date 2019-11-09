@@ -13,11 +13,8 @@ class lowodds_ct:
             favourite text,
             favourite_odds real,
             home_back_odds real,
-            home_back_volume real,
             draw_back_odds real,
-            draw_back_volume real,
             away_back_odds real,
-            away_back_volume real,
             market_entry_odds real,
             market_entry_type text,
             bank_volume real)""")
@@ -161,11 +158,8 @@ class lowodds_wt:
         :favourite,
         :favourite_odds,
         :home_back_odds,
-        :home_back_volume,
         :draw_back_odds,
-        :draw_back_volume,
         :away_back_odds,
-        :away_back_volume,
         :market_entry_odds,
         :market_entry_type,
         :bank_volume)""",{
@@ -178,11 +172,8 @@ class lowodds_wt:
         'favourite':bet_data.favourite,
         'favourite_odds':bet_data.favourite_odds,
         'home_back_odds':bet_data.home_back_odds,
-        'home_back_volume':bet_data.home_back_volume,
         'draw_back_odds':bet_data.draw_back_odds,
-        'draw_back_volume':bet_data.draw_back_volume,
         'away_back_odds':bet_data.away_back_odds,
-        'away_back_volume':bet_data.away_back_volume,
         'market_entry_odds':strategy_data.market_entry_odds, # COMMENT: Stratey specific data #1
         'market_entry_type':strategy_data.market_entry_type, # COMMENT: Stratey specific data #2
         'bank_volume':strategy_data.bank_volume}) # COMMENT: Stratey specific data #3
