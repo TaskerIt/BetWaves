@@ -35,7 +35,7 @@ class lowodds_backlay_st:
                 # Check game state is at least 20 minutes before start and not in play
                 if (88) < bet_data.game_time_state:
                     # home odds are less than 1.16
-                    if 1.01 < bet_data.home_back_odds < 1.16:
+                    if 1.04 < bet_data.home_back_odds < 1.16:
                         # home team are winning
                         if bet_data.home_team_score > bet_data.away_team_score:
                             # PREVIOUS odds for backing home team are greater than 1.11 and less than 1.16
@@ -65,7 +65,7 @@ class lowodds_backlay_st:
                             self.market_entry_odds = bet_data.previous_entry_odds
                             self.market_entry_type = "none"
                             self.bank_volume = bet_data.previous_bank_volume    
-                    elif 1.01 < bet_data.draw_back_odds<1.16:
+                    elif 1.04 < bet_data.draw_back_odds<1.16:
                         if bet_data.home_team_score == bet_data.away_team_score:
                             if 1.01 < bet_data.previous_draw_back_odds < 1.16:
                                 if bet_data.home_back_odds > 2 and bet_data.away_back_odds > 2:
@@ -86,7 +86,7 @@ class lowodds_backlay_st:
                             self.market_entry_odds = bet_data.previous_entry_odds
                             self.market_entry_type = "none"
                             self.bank_volume = bet_data.previous_bank_volume    
-                    elif 1.01 < bet_data.away_back_odds < 1.16:
+                    elif 1.04 < bet_data.away_back_odds < 1.16:
                         if bet_data.home_team_score < bet_data.away_team_score:
                             if 1.01 < bet_data.previous_away_back_odds < 1.16:
                                 if bet_data.favourite == "away":
