@@ -9,10 +9,11 @@ import time
 import tkinter as tk
 #Date
 from datetime import datetime, timedelta
-from tkinter import BOTH, END, LEFT, Checkbutton, IntVar, Label, ttk, Tk, OptionMenu, StringVar
-
+from tkinter import BOTH, END, LEFT, Checkbutton, IntVar, Label, ttk, Tk, OptionMenu, StringVar, messagebox
+# BeautifulSoup
 from bs4 import BeautifulSoup
-
+# System
+import sys
 # Data
 from reader_bfe_football import RecordedData
 from strategy_laydraw import laydraw_ct, laydraw_st, laydraw_wt
@@ -237,11 +238,12 @@ class ThreadedClient:
         # ACTION: Open Driver window and define driver variable
         try:
             # COMMENT: Case where we have already opened the window
-            opened_driver = get_driver(url,url_previous)
+            opened_driver = get_driver(url)
         except:
             # COMMENT: Case where we have to open a new window
-            url_previous = "not available"
-            opened_driver = get_driver(url,url_previous)
+            messagebox.showerror("Error opening driver", "Exiting Program")
+            # COMMENT: 
+            sys.exit()
        
         print("Macro started")
 
