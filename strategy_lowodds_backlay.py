@@ -26,7 +26,7 @@ class lowodds_backlay_st:
     def __init__(self,bet_data,c,conn,driver):
         
         # Configuration variables
-        stake_ammount = 2
+        stake_ammount = 5
         
         # ============= Market Entry ===============
         try:
