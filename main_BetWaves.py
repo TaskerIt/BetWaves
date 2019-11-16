@@ -79,7 +79,7 @@ class GuiPart:
         w.grid(row=2, column = 3, columnspan = 1)
 
         # Timer drop down menu
-        timeoptions = [60,600,6000,6000]
+        timeoptions = [60,600,6000,60000]
 
         global timeoption
         timeoption = StringVar(bet_overview)
